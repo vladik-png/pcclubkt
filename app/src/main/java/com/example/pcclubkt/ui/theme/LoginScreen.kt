@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(onLoginClick: () -> Unit) {
     var loginText by remember { mutableStateOf("") }
     var passwordText by remember { mutableStateOf("") }
     val brandColor = Color(0x80FF0000)
@@ -82,9 +82,7 @@ fun LoginScreen() {
         Spacer(modifier = Modifier.height(64.dp))
 
         Button(
-            onClick = {
-                println("Логін: $loginText, Пароль: $passwordText")
-            },
+            onClick = onLoginClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

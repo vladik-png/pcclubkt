@@ -32,13 +32,22 @@ class MainActivity : ComponentActivity() {
         setContent {
             PcclubktTheme {
                 var showSplash by remember { mutableStateOf(true) }
-
+                var isLoggedIn by remember { mutableStateOf(false) }
+                var isShiftStarted by remember { mutableStateOf(false) }
                 if (showSplash) {
                     SplashScreen(
                         onSplashFinished = { showSplash = false }
                     )
+                } else if (!isLoggedIn) {
+                    LoginScreen(
+                        onLoginClick = { isLoggedIn = true }
+                    )
+                } else if (!isShiftStarted) {
+                    HelloScreen(
+                        onStartShiftClick = { isShiftStarted = true }
+                    )
                 } else {
-                    LoginScreen()
+                    HomeScreen()
                 }
             }
         }
