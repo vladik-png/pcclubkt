@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                         onStartShiftClick = { isShiftStarted = true }
                     )
                 } else {
-                    HomeScreen()
+                    MainScreen()
                 }
             }
         }
