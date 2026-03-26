@@ -1,6 +1,7 @@
 package com.example.pcclubkt
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -22,12 +23,29 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.example.pcclubkt.ui.theme.PcclubktTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.log
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "pc_club_database"
+        ).build()
+        val AdminDAO = db.AdminDAO()
+        lifecycleScope.launch {
+            val testAdmin = Admin(login = "admin" , pass = "admin")
+            AdminDAO.insertAdmin(testAdmin)
+            val savedAdmin = AdminDAO.getFirstAdmin()
+            Log.d("ROOM_TEST","Find a database: Login=${savedAdmin?.login}," +
+                    "Password=${savedAdmin?.pass}")
+        }
         enableEdgeToEdge()
         setContent {
             PcclubktTheme {
