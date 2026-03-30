@@ -18,17 +18,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun HelloScreen(
     adminName: String = "test user",
-    onStartShiftClick: () -> Unit
+    onLoginSuccess: () -> Unit
 ) {
     val brandColor = Color(0xFFFF8484)
 
-    val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
+    val sdf = SimpleDateFormat("dd.MM.yy", Locale.getDefault())
+    val currentDate = sdf.format(Date())
 
     Column(
         modifier = Modifier
@@ -50,7 +52,7 @@ fun HelloScreen(
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = onStartShiftClick,
+            onClick = onLoginSuccess,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

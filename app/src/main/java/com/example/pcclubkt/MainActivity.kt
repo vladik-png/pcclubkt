@@ -22,32 +22,48 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
 import com.example.pcclubkt.ui.theme.PcclubktTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "pc_club_database"
+        ).fallbackToDestructiveMigration().build()
+
+        lifecycleScope.launch {
+            val pcDao = db.pcDao()
+            val initialPcs = List(18) { index ->
+                PcEntity(id = index + 1, name = "${index + 1} пк", isOccupied = false)
+            }
+            pcDao.insertComputers(initialPcs)
+        }
+
         setContent {
             PcclubktTheme {
-                var showSplash by remember { mutableStateOf(true) }
-                var isLoggedIn by remember { mutableStateOf(false) }
-                var isShiftStarted by remember { mutableStateOf(false) }
-                if (showSplash) {
-                    SplashScreen(
-                        onSplashFinished = { showSplash = false }
-                    )
-                } else if (!isLoggedIn) {
-                    LoginScreen(
-                        onLoginClick = { isLoggedIn = true }
-                    )
-                } else if (!isShiftStarted) {
-                    HelloScreen(
-                        onStartShiftClick = { isShiftStarted = true }
-                    )
-                } else {
-                    MainScreen()
+                var currentScreen by remember { mutableStateOf("splash") }
+
+                when (currentScreen) {
+                    "splash" -> {
+                        SplashScreen(
+                            onSplashFinished = { currentScreen = "login" }
+                        )
+                    }
+                    "login" -> {
+                        LoginScreen(
+                            onLoginSuccess = { currentScreen = "main" }
+                        )
+                    }
+                    "main" -> {
+                        MainScreen(db = db)
+                    }
                 }
             }
         }

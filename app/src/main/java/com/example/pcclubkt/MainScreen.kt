@@ -15,7 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun MainScreen() {
+fun MainScreen(db: AppDatabase) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -51,6 +51,7 @@ fun MainScreen() {
                     Text("Клієнти")
                 }
             }
+
             composable("settings") {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Text("Налаштування")
@@ -61,11 +62,20 @@ fun MainScreen() {
                     Text("Тікети")
                 }
             }
-            composable("events") {
-                Box(Modifier.fillMaxSize()) {
-                    Text("Івенти")
-                }
+            composable("events")
+            {
+                PcGridScreen(pcDao = db.pcDao())
             }
+//            composable("events") {
+//                Box(Modifier.fillMaxSize()) {
+//                    Text("Івенти")
+//                }
+//            }
+
+//            composable("pc_grid")
+//            {
+//                PcGridScreen(pcDao = db.pcDao())
+//            }
         }
     }
 }
