@@ -24,7 +24,7 @@ import java.util.Locale
 
 @Composable
 fun HelloScreen(
-    adminName: String = "test user",
+    adminName: String,
     onLoginSuccess: () -> Unit
 ) {
     val brandColor = Color(0xFFFF8484)

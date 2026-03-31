@@ -40,15 +40,18 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             val pcDao = db.pcDao()
+            val adminDao = db.adminDao()
             val initialPcs = List(18) { index ->
                 PcEntity(id = index + 1, name = "${index + 1} пк", isOccupied = false)
             }
             pcDao.insertComputers(initialPcs)
+            adminDao.insertAdmin(AdminEntity(login = "admin", password = "admin", name = "admin"))
         }
 
         setContent {
             PcclubktTheme {
                 var currentScreen by remember { mutableStateOf("splash") }
+                var loggedInAdminName by remember { mutableStateOf("") }
 
                 when (currentScreen) {
                     "splash" -> {
@@ -58,7 +61,17 @@ class MainActivity : ComponentActivity() {
                     }
                     "login" -> {
                         LoginScreen(
-                            onLoginSuccess = { currentScreen = "main" }
+                            db = db,
+                            onLoginSuccess = { adminName -> loggedInAdminName = adminName
+                                currentScreen = "hello" }
+                        )
+                    }
+                    "hello" -> {
+                        HelloScreen(
+                            adminName = loggedInAdminName,
+                            {
+                                currentScreen = "main"
+                            }
                         )
                     }
                     "main" -> {
