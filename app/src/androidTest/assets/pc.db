@@ -1,0 +1,497 @@
+-- import to SQLite by running: sqlite3.exe db.sqlite3 -init sqlite.sql
+
+PRAGMA journal_mode = MEMORY;
+PRAGMA synchronous = OFF;
+PRAGMA foreign_keys = OFF;
+PRAGMA ignore_check_constraints = OFF;
+PRAGMA auto_vacuum = NONE;
+PRAGMA secure_delete = OFF;
+BEGIN TRANSACTION;
+
+create table login(
+Password TEXT not null
+);
+insert into login(Username, Password)
+values('kovalenko.andrii','A12345k!'),
+('savchenko.viktor','V12345s!'),
+('lytvyn.petro','P12345l!'),
+('korol.dmytro','D12345k!'),
+('dyachenko.volodymyr','V12345d!'),
+('boiko.mykola','M12345b!');
+create table Customer (
+CustomerID int auto_increment primary key,
+FullName TEXT not null,
+Email TEXT not null,
+HappyBirthday date not null,
+PhonTEXT  not null,
+MembershipStatus int not null,
+Balance int not null,
+Sex TEXT ,
+Registration datetime not null,
+LastVisit datetime not null
+);
+insert into Customer (FullName, Email, HappyBirthday, PhoneNumber, MembershipStatus, Balance, Sex, Registration,LastVisit)
+values
+('ВинниченкоА.А','VynnychenkoA@gmail.com','2000-03-14','38099999999','1',783,'male','2023-03-1214:23:45','2024-12-01 09:00:00'),
+('СашукС.П','SashukSP@gmail.com','1999-08-29','+380967831234','3',999,'male','2023-11-05 09:10:30','2024-12-05 14:30:00'),
+('МіхноД.Д','MihnoDD@gmail.com','2000-04-15','+380974325313','2',532,'male','2023-06-17 16:15:05','2024-12-10 11:15:00'),
+('ІваненкоМ.С','IvanenkoMS@gmail.com','1991-04-07','+380671234567','1',334,'female','2023-08-23 11:55:02','2024-12-15 16:45:00'),
+('ОлійникА.В.','OliyunykAV@gmail.com','1999-08-29','+380502345678','2',234,'male','2024-01-02 08:45:27','2024-12-20 18:00:00'),
+('СавчукО.М.','SavchukOM@gmail.com','2000-04-15','+380633456789','3',874,'female','2024-09-14 18:30:12','2024-12-25 13:00:00'),
+('БондаренкоР.І.','BondarenkoRI@gmail.com','1992-12-03','+380964567890','2',437,'male','2024-04-27 13:40:55','2024-12-31 22:00:00');
+create table Staff (
+StaffID int auto_increment primary key,
+FullName TEXT not null,
+Phone_number TEXT not null not null,
+Email TEXT not null,
+Position TEXT not null,
+Zmina TEXT  not null,
+Salary TEXT not null
+);
+insert into Staff (FullName, Phone_number, Email, Position, Zmina, Salary)
+values
+('Коваленко Андрій Петрович', '+380671234567', 'kovalenko.andrii@gmail.com', 'Менеджер', 2, '13000'), ('Савченко Віктор Олексійович', '+380502345678', 'savchenko.viktor@gmail.com', 'Комп’ютерний майстер', 1, '20500'),
+('Литвин Петро Васильович', '+380633456789', 'lytvyn.petro@gmail.com', 'Адмін', 1, '23500'),
+('Король Дмитро Петрович', '+380684567890', 'korol.dmytro@gmail.com', 'Менеджер', 1, '13000'),
+('Дяченко Володимир Анатолійович', '+380665678901', 'dyachenko.volodymyr@gmail.com', 'Менеджер', 1, '13000'),
+('Бойко Микола Юрійович', '+380996789012', 'boiko.mykola@gmail.com', 'Адмін', 2, '23500'),
+('Ткачук Олексій Іванович', '+380937890123', 'tkachuk.oleksii@gmail.com', 'Менеджер', 2, '13000'),
+('Жуков Олександр Миколайович', '+380978901234', 'zhukov.oleksandr@gmail.com', 'Менеджер', 2, '13000'),
+('Коломієць Роман Михайлович', '+380959012345', 'kolomiiets.roman@gmail.comm', 'Менеджер', 1, '13000'),
+('Дмитренко Сергій Миколайович', '+380670123456', 'dmytrenko.serhii@gmail.com', 'Комп’ютерний майстер', 1, '20500'),
+('Романюк Василь Олександрович', '+380501234578', 'romaniuk.vasyl@gmail.com', 'Менеджер', 1, '13000'),
+('Василенко Ігор Сергійович', '+380632345689', 'vasylenko.ihor@gmail.com', 'Комп’ютерний майстер', 2, '20500'),
+('Павленко Олег Вікторович', '+380683456701', 'pavlenko.oleh@gmail.com', 'Адмін', 2, '23500'),
+('Кравченко Анатолій Олегович', '+380664567812', 'kravchenko.anatolii@gmail.com', 'Менеджер', 1, '13000'),
+('Шевчук Артем Романович', '+380995678923', 'shevchuk.artem@gmail.com','Комп’ютерний майстер',2,'20500'),
+('Сидоренко Юрій Андрійович', '+380936789034', 'syvorenko.yurii@gmail.com', 'Менеджер', 2, '13000');
+create table Specs (
+SpecsID int auto_increment primary key,
+ComputerID int,
+Cpu TEXT not null,
+Gpu TEXT not null,
+RAM TEXT not null,
+Storage TEXT not null,
+Monitor TEXT not null,
+Mouse TEXT not null,
+Keyboard TEXT not null,
+OS TEXT not null
+);
+insert into Specs(ComputerID, Cpu, Gpu, RAM, Storage, Monitor, Mouse, Keyboard, OS)
+values
+(1, 'Intel Core i7-14700k', 'Nvidia RTX 4080', 'Kingston DDR5 32GB', 'Kingston ssd m2 1000GB', 'Lenovo 175ГЦ 32`', 'Logitech G102', 'Akko 5075b plus', 'Windows 11'),
+(2, 'Intel Core i5-12500f', 'Nvidia RTX 4060', 'Kingston DDR5 32GB', 'Kingston ssd m2 1000GB', 'Lenovo 175ГЦ 32`', 'Logitech G102', 'Akko 5075b plus', 'Windows 10'),
+(3, 'Intel Core i7-14700k', 'Nvidia RTX 4080', 'Kingston DDR5 32GB', 'Kingston ssd m2 1000GB', 'Lenovo 175ГЦ 32`', 'Logitech G102', 'Akko 5075b plus', 'Windows 11'),
+(4, 'Ryzen AMD', 'Nvidia RTX 4080', 'Kingston DDR5 32GB', 'Kingston ssd m2 1000GB', 'Lenovo 175ГЦ 32`', 'Logitech G102', 'Akko 5075b plus', 'Windows 10');
+create table Computers (
+ComputerID int auto_increment primary key,
+SpecsID int not null,
+Status TEXT 
+default 'available',
+foreign key (SpecsID) references Specs(SpecsID)
+);
+insert into Computers(SpecsID, Status)
+values(1,'available'),
+(2, 'occupied'),
+(3, 'occupied'),
+(4, 'available'),
+(1, 'available'),
+(2, 'occupied'),
+(3, 'available'),
+(4, 'occupied'),
+(1, 'available'),
+(2, 'occupied'),
+(3, 'available'),
+(4, 'available'),
+(1, 'available'),
+(2, 'occupied'),
+(3, 'available'),
+(4, 'occupied'),
+(1, 'available'),
+(2, 'available'),
+(3, 'available'),
+(4, 'occupied'),
+(1, 'occupied'),
+(2, 'occupied'),
+(3, 'occupied'),
+(4, 'available'),
+(1, 'occupied'),
+(2, 'available'),
+(3, 'occupied');
+create table VisitLog (
+VisitID int auto_increment primary key,
+CustomerID int not null,
+ComputerID int not null,
+StartTime datetime not null,
+EndTime datetime not null,
+foreign key (CustomerID) references Customer(CustomerID),
+foreign key (ComputerID) references Computers(ComputerID)
+);
+insert into Visitlog(CustomerID, ComputerID, StartTime, EndTime)
+values(1, 3, '2024-07-24 11:00', '2024-07-24 16:00'),
+(1, 2, '2024-06-20 12:00', '2024-06-20 16:00'),
+(1, 4, '2024-05-01 10:00', '2024-05-01 17:00'),
+(1, 3, '2024-04-25 16:30', '2024-04-25 19:30'),
+(1, 2, '2024-01-15 16:06', '2024-01-15 18:06');
+create table Games (
+GameID int auto_increment primary key,
+ComputerID int,
+GameName TEXT not null,
+Description TEXT null,
+New boolean not null
+default 0,
+Top boolean not null
+default 0,
+foreign key (ComputerID) references Computers(ComputerID)
+);
+insert into Games (ComputerID,GameName,Description,New,Top)
+values
+(1, 'Assassin's Creed® Origins', 'The Discovery Tour by Assassin''s Creed®: Ancient Egypt is available now as a free update! Ancient Egypt, a land of majesty and intrigue, is disappearing in a ruthless fight for power.', 1, 0),
+(2, 'Grand Theft Auto V', 'Grand Theft Auto V для ПК — це шанс заново відчути атмосферу славного міста Лос-Сантос і відправитись округ Blaine County', 0, 1),
+(3, 'Assassin's Creed® Odyssey', 'Choose your fate in Assassin''s Creed® Odyssey. From outcast to living legend, embark on an odyssey to uncover the secrets of your past and change the fate of Ancient Greece.', 0, 0),
+(4, 'BioShock™ Remastered', 'BioShock is a shooter unlike any other, loaded with unique weapons and tactics. Complete with an arsenal of revolvers, shotguns, and grenade launchers.', 0, 0),
+(5, 'BioShock™ 2 Remastered', 'In BioShock 2, you step into the boots of the most iconic denizen of Rapture, the Big Daddy, as you explore through the decrepit and beautiful fallen city.', 0, 0),
+(6, 'BioShock Infinite', 'Indebted to the wrong people, with his life on the line, veteran of the U.S. Cavalry and your hired gun, Booker DeWitt has only one opportunity to wipe his slate clean.', 0, 0),
+(7, 'Dota 2', 'Щорічні мільйонні призи в цьому культовому у біді за одного з пізніх героїв Dota. І менше значення, буде із 10-ти годин гри на 1000- назавжди зізнається нове для відкриття.', 0, 1),
+(8, 'Crash Bandicoot™ N. Sane Trilogy', 'Your favorite marsupial, Crash Bandicoot™, is back! He's enhanced, extended and ready-to-dance with the N. Sane Trilogy.', 0, 0),
+(9, 'Cyberpunk 2077', 'Представляємо бойовик і ролівку раз з відкритим світом. Дій відбувається у темному майбутньому Haйт-Сіті.', 0, 0),
+(10, 'Call of Duty®: Black Ops 6', 'Продовження серії Black Ops з кінематографічною одиничною кампанією.', 1, 1),
+(11, 'Black Myth: Wukong', 'Рольові бойовики за мотивами китайської міфології.', 1, 1),
+(12, 'Kingdom Come: Deliverance', 'Сочинена ролева в історії свій ігри, яка закручує нас у «певну» пригоду на території Священної Римської імперії.', 0, 0),
+(13, 'Kingdom Come: Deliverance II', 'Заключена динамічна рольова гра з багатьма сюжетами, в якій події розгортаються в Європі 15 століття.', 1, 0);
+create table Payments (
+PaymentID int auto_increment primary key,
+CustomerID int,
+Amount float not null check (Amount >= 0),
+Metod TEXT  not null,
+foreign key (CustomerID) references Customer(CustomerID)
+);
+insert into Payments (CustomerID, Amount, Metod)
+values
+(1, 1500, 'cash'),
+(2, 2000, 'card'),
+(3, 1200, 'cash');
+create table Memberships (
+MemberhipID int auto_increment primary key,
+CustomerID int,
+MembershipName TEXT,
+NumberHours int,
+ProcentPeople int,
+Bonus int,
+foreign key (CustomerID) references Customer(CustomerID)
+);
+insert into Memberships(CustomerID, MembershipName, NumberHours, ProcentPeople, Bonus)
+values
+(1, 'VIP', '555', 10, 500),
+(2, 'Gold', '200', 30, 500),
+(3, 'Silver', '50', 50, 500),
+(4, 'Bronze', '0', 10, 500);
+create table ServiceLogs (
+ServiceLogsID int auto_increment primary key,
+ComputerID int,
+ServiceDate datetime,
+IssueDescription text,
+Resolved boolean,
+foreign key (ComputerID) references Computers(ComputerID)
+);
+insert into ServiceLogs(ComputerID, ServiceDate, IssueDescription, Resolved)
+values(1, '2024-02-10', 'Заміна термопасти на 10 ПК', '1'),
+(2, '2024-03-15', 'Заміна оперативної пам’яті на 5 ПК', '0'),
+(3, '2024-03-17', 'Заміна wifi модуля на 2 ПК', '0'),
+(4, '2024-04-20', 'Заміна процесора на 9 ПК', '1'),
+(5, '2024-06-15', 'Заміна відеокарти на 1 ПК', '1');
+create table FindCustomer (
+FindID int auto_increment primary key,
+StaffID int,
+CustomerID int,
+PhonTEXT ,
+ComputerID int,
+VisitDateFrom datetime,
+VisitDateTo datetime,
+foreign key (CustomerID) references Customer(CustomerID),
+foreign key (ComputerID) references Computers(ComputerID),
+foreign key (StaffID) references Staff(StaffID)
+);
+insert into FindCustomer(StaffID, CustomerID, ComputerID, PhoneNumber, VisitDateFrom, VisitDateTo)
+values
+(1, 1, 10, '+380967831234','2024-10-15 12:30:00', '2024-10-15 16:30:00'),
+(2, 2, 7, '+380974325313', '2024-11-11 02:10:00', '2024-11-11 08:30:00'),
+(3, 3, 9, '+38099999999', '2024-12-05 08:30:00', '2024-12-05 10:30:00');
+create table Events (
+EventID int auto_increment primary key,
+GameID int,
+EventDate date,
+Prize int,
+CountPeople int,
+CustomerID int,
+Status boolean,
+foreign key (CustomerID) references Customer(CustomerID),
+foreign key (GameID) references Games(GameID)
+);
+insert into Events (GameID, EventDate, Prize, CountPeople, CustomerID, Status)
+values
+(1, '2024-01-15', 2000, 10, 1, 1),
+(2, '2024-04-02', 2500, 10, 2, 1),
+(1, '2024-06-19', 2000, 10, 3, 1),
+(2, '2024-09-10', 2500, 10, 1, 1),
+(1, '2024-11-25', 2000, 10, 1, 1);
+create table Orders (
+OrderID int auto_increment primary key,
+PaymentID int,
+CustomerID int,
+StaffID int,
+Price float not null,
+Quantity int not null,
+TotalAmount float not null,
+foreign key (CustomerID) references Customer(CustomerID),
+foreign key (StaffID) references Staff(StaffID),
+foreign key (PaymentID) references Payments(PaymentID)
+);
+insert into Orders(PaymentID, CustomerID, StaffID, Price, Quantity, TotalAmount)
+values (1, 1, 1, 100, 1, 150);
+Створення таблиці Тікети:
+create table Tickets(
+TicketsID int auto_increment primary key,
+CustomerID int,
+ComputerID int,
+StaffID int,
+Problem text,
+Resolved boolean,
+foreign key (CustomerID) references Customer(CustomerID),
+foreign key (StaffID) references Staff(StaffID),
+foreign key (ComputerID) references Computers(ComputerID)
+);
+insert into Tickets(CustomerID, ComputerID, StaffID, Problem, Resolved)
+values
+(1, 10, 2, 'Заміна термопасти на 10 ПК', 1),
+(2, 5, 10, 'Заміна оперативної пам’яті на 5 ПК', 0),
+(3, 2, 12, 'Заміна wifi модуля на 2 ПК', 0),
+(4, 9, 15, 'Заміна процесора на 9 ПК', 1),
+(5, 1, 2, 'Заміна відеокарти на 1 ПК', 1),
+(6, 17, 10, 'Перевстановлення windows на 17 ПК', 0);
+create table Suppliers(
+SuppliersID int auto_increment primary key,
+SupplierName TEXT,
+Address TEXT,
+PhonTEXT ,
+DeliveryTime int
+);
+insert into Suppliers(SupplierName, Address, PhoneNumber, DeliveryTime)
+values
+('АСБІС', 'м. Київ, вул. Хрещатик, 22', '+380635678901', 2),
+('Телемарт', 'м. Львів, вул. Городоцька, 135','+380442345678',3),
+('Фокстрот', 'м. Дніпро, просп. Дмитра Яворницького, 85', '+380934567890', 2),
+('Ельдорадо', 'м. Харків, вул. Сумська, 45', '+380678901234', 4),
+('Комп’ютерний всесвіт', 'м. Одеса, вул. Дерибасівська, 10', '+380501234567', 3);
+create table Tovar(
+TovarID int auto_increment primary key,
+SuppliersID int not null,
+TovarName text not null,
+Price float not null,
+DeliveryDate date not null,
+DeliveryTime int not null,
+DeliveryStatus boolean not null,
+foreign key (SuppliersID) references Suppliers(SuppliersID)
+);
+insert into Tovar(SuppliersID, TovarName, Price, DeliveryDate, DeliveryTime, DeliveryStatus)
+values(1, 'Процесор Intel Core i7-14700k', 6000, '2024-03-15', 2, 1),
+(2, 'Відеокарта Nvidia RTX 4080', 36000, '2024-03-17', 3, 1),
+(3, 'Оперативна пам`ять Kingston DDR5 32GB', 13000, '2024-04-20', 3, 1),
+(4, 'Процесор AMD Ryzen 5 5600x', 9000, '2024-06-15',2, 1),
+(5, 'Процесор AMD Ryzen 7 7800x', 12000, '2024-06-15',2, 1),
+(2, 'Монітор Lenovo', 16000, '2024-06-15', 0, 0);
+create table Kasa(
+ID int auto_increment primary key,
+Date datetime,
+PaymentID int,
+Suma float,
+Type TEXT ,
+Comment text null,
+Total float null,
+foreign key(PaymentID) references Payments(PaymentID)
+);
+insert into Kasa(Date,PaymentID,Suma,Type,Comment,Total)
+values('2024-10-05 08:15', 2, 500, 'Дохід',' ', 0),
+('2024-10-03 14:27', 1, -1000, 'Витрати', ' ', 0),
+('2024-10-02 19:45', 2, 550,'Дохід','',0),
+('2024-10-01 06:32', 1, 1000, 'Дохід', ' ', 0),
+('2024-10-01 04:19', 2, 940, 'Дохід', ' ', 0),
+('2024-09-30 11:58', 1, -2000, 'Витрати', ' ', 0),
+('2024-09-30 23:04', 1, 700, 'Дохід', ' ', 0),
+('2024-09-29 17:53', 1, 1500, 'Дохід', ' ', 0);
+create table KasaAdm(
+ID int auto_increment primary key,
+Date date,
+StaffID int,
+Balance float,
+Earnings float,
+Cash float,
+Card float,
+Expenses float,
+EndBalance float,
+foreign key (StaffID) references Staff(StaffID)
+);
+insert into KasaAdm(Date, StaffID, Balance, Earnings, Cash, Card, Expenses, EndBalance)
+values
+('2024-01-01', 3, '1000', '1000', '500', '500', '0', '2000'),
+('2024-01-02', 6, '2000', '2000', '1000', '1000', '1000', '3000'),
+('2024-01-03', 13, '3000', '2000', '1500', '500', '0', '5000'),
+('2024-01-04', 3, '5000', '1000', '500', '500', '0', '6000'),
+('2024-01-05', 6, '6000', '2000', '1000', '1000', '4000', '4000'),
+('2024-01-06', 13, '4000', '3000', '2100', '900', '0', '7000'),
+('2024-01-07', 3, '7000', '1000', '500', '500','0', '8000'),
+('2024-01-08', 6, '8000', '2000', '1500', '500','0', '9000'),
+('2024-01-09', 13, '9000', '4000', '1500', '2500', '0', '13000'),
+('2024-01-10', 3, '13000', '2000', '500', '1500', '10000', '5000');
+create table Genderdistribution(
+Gender TEXT  not null,
+Visits int not null,
+CustomerID int not null,
+foreign key (CustomerID) references Customer(CustomerID)
+);
+insert into Genderdistribution (Gender, Visits, CustomerID)
+values
+('male', 60, 1),
+('female', 40, 2);
+create table Agedistribution (
+Agegroup TEXT  not null,
+Visits int not null,
+Customerid int not null,
+foreign key (CustomerID) references Customer(CustomerID)
+);
+insert into Agedistribution (Agegroup, Visits, Customerid)
+values
+('10-15 років', 20, 1),
+('16-20 років', 40, 2),
+('21-25 років', 25, 3),
+('31 рік та старші', 5, 4);
+create table Monthlyhours (
+Month TEXT  not null,
+Hours int not null,
+VisitID int not null,
+foreign key (VisitID) references Visitlog(VisitID)
+);
+insert into Monthlyhours (Month, Hours, VisitID)
+values
+('січ', 250, 1),
+('лют', 200, 2),
+('бер', 230, 3),
+('квіт', 210, 4),
+('трав', 240, 5),
+('черв', 230, 1),
+('лип', 250, 2),
+('серп', 240, 3),
+('вер', 220, 4),
+('жовт', 210, 5),
+('лист', 230, 1),
+('груд', 250, 2);
+create table Averagemonthlyhours(
+Month TEXT  not null,
+Averagehours float not null,
+Visitid int not null,
+foreign key (VisitID) references Visitlog(VisitID)
+);
+insert into Averagemonthlyhours (Month, Averagehours, VisitID)
+values
+('січ', 4.5, 1),
+('лют', 5.5, 2),
+('бер', 6, 3),
+('квіт', 5.5, 4),
+('трав', 6.5, 5),
+('черв', 7, 1),
+('лип', 8, 2),
+('серп', 6.5, 3),
+('вер', 6, 4),
+('жовт', 5, 5),
+('лист', 7, 1),
+('груд', 6.5, 2);
+create table Monthlyearnings (
+Month TEXT  not null,
+Earnings int not null,
+PaymentID int not null,
+foreign key (PaymentID) references Payments(PaymentID)
+);
+insert into Monthlyearnings (Month, Earnings, Paymentid)
+values
+('січ', 3000, 1),
+('лют', 2500, 2),
+('бер', 3500, 3),
+('квіт', 4000, 1),
+('трав', 4500, 2),
+('черв', 4000, 3),
+('лип', 3500, 1),
+('серп', 4000, 2),
+('вер', 3700, 3),
+('жовт', 3300, 1),
+('лист', 2800, 2),
+('груд', 3100, 3);
+create table Monthlyexpenses (
+Month TEXT  not null,
+Expenses int not null,
+KasaID int not null,
+foreign key (KasaID) references Kasa(ID)
+);
+insert into Monthlyexpenses (Month, Expenses, KasaID)
+values
+('січ', 2000, 1),
+('лют', 2200, 2),
+('бер', 1800, 3),
+('квіт', 1900, 4),
+('трав', 2100, 5),
+('черв', 2300, 6),
+('лип', 2400, 7),
+('серп', 2500, 8),
+('вер', 2600, 1),
+('жовт', 2300, 2),
+('лист', 2200, 3),
+('груд', 2500, 4);
+create table Monthlysessions (
+Month TEXT  not null,
+Sessions int not null,
+Visitid int not null,
+foreign key (VisitID) references Visitlog(VisitID)
+);
+insert into Monthlysessions (Month, Sessions, VisitID)
+values
+('січ', 200, 1),
+('лют', 220, 2),
+('бер', 210, 3),
+('квіт', 230, 4),
+('трав', 250, 5),
+('черв', 240, 1),
+('лип', 220, 2),
+('серп', 300, 3),
+('вер', 230, 4),
+('жовт', 210, 5),
+('лист', 240, 1),
+('груд', 250, 1);
+create table Gamepopularity (
+GameID int not null,
+Popularitypercentage float not null,
+foreign key (GameID) references Games(GameID)
+);
+insert into Gamepopularity (GameID, Popularitypercentage)
+values
+(1, 11),
+(2, 20),
+(3, 10),
+(4, 6),
+(5, 5),
+(6, 7),
+(7, 26),
+(8, 6),
+(9, 8),
+(10, 17),
+(11, 13),
+(12, 15),
+(13, 10);
+
+
+
+
+
+COMMIT;
+PRAGMA ignore_check_constraints = ON;
+PRAGMA foreign_keys = ON;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
