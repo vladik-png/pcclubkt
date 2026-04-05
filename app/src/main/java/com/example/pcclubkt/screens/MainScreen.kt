@@ -47,7 +47,10 @@ fun MainScreen(db: AppDatabase) {
             }
 
             composable("clients") {
-                ClientsScreen(customerDao = db.customerDao())
+                ClientsScreen(
+                customerDao = db.customerDao(),
+                visitLogDao = db.visitLogDao()
+                )
             }
 
             composable("settings") {
