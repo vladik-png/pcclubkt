@@ -11,18 +11,20 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = SpecsEntity::class,
             parentColumns = ["SpecsID"],
-            childColumns = ["SpecsID"],
-            onDelete = ForeignKey.NO_ACTION,
-            onUpdate = ForeignKey.NO_ACTION
+            childColumns = ["SpecsID"]
+        ),
+        ForeignKey(
+            entity = CustomerEntity::class,
+            parentColumns = ["CustomerID"],
+            childColumns = ["CurrentClientID"],
+            onDelete = ForeignKey.NO_ACTION
         )
     ]
 )
 data class ComputerEntity(
     @PrimaryKey(autoGenerate = true)
     val ComputerID: Int? = null,
-
     val SpecsID: Int,
-
-    @ColumnInfo(defaultValue = "'available'")
-    val Status: String? = "available"
+    val Status: String? = "available",
+    val CurrentClientID: Int? = null
 )

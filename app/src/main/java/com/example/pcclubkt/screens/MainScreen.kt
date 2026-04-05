@@ -47,9 +47,7 @@ fun MainScreen(db: AppDatabase) {
             }
 
             composable("clients") {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Text("Клієнти")
-                }
+                ClientsScreen(customerDao = db.customerDao())
             }
 
             composable("settings") {
@@ -62,9 +60,11 @@ fun MainScreen(db: AppDatabase) {
                     Text("Тікети")
                 }
             }
-            composable("pc_grid")
-            {
-                PcGridScreen(computerDao = db.computerDao())
+            composable("computers") {
+                PcGridScreen(
+                    computerDao = db.computerDao(),
+                    customerDao = db.customerDao()
+                )
             }
 //            composable("events") {
 //                Box(Modifier.fillMaxSize()) {

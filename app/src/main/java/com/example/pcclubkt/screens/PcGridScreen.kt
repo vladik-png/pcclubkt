@@ -7,54 +7,81 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pcclubkt.database.ComputerDao
-import com.example.pcclubkt.database.ComputerEntity
+import com.example.pcclubkt.database.ComputerWithDetails
+import com.example.pcclubkt.database.CustomerDao
+import com.example.pcclubkt.database.CustomerEntity
 import kotlinx.coroutines.launch
 
 @Composable
-fun PcGridScreen(computerDao: ComputerDao) {
-    val backgroundColor = Color.White
-    val computerList by computerDao.getAllComputersFlow().collectAsState(initial = emptyList())
+fun PcGridScreen(
+    computerDao: ComputerDao,
+    customerDao: CustomerDao
+) {
+    val computerList by computerDao.getComputersWithDetails().collectAsState(initial = emptyList())
+
+    val allCustomers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
+
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-    ) {
-        Text(
-            text = "Керування ПК",
-            fontSize = 24.sp,
-            color = Color.Black,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp, bottom = 24.dp)
+    var searchQuery by remember { mutableStateOf("") }
+    var filterStatus by remember { mutableStateOf("all") }
+
+    val filteredList = computerList.filter { item ->
+        val pc = item.computer
+        val matchesSearch = pc.ComputerID?.toString()?.contains(searchQuery) ?: true
+        val matchesFilter = when (filterStatus) {
+            "available" -> pc.Status == "available"
+            "occupied" -> pc.Status == "occupied"
+            else -> true
+        }
+        matchesSearch && matchesFilter
+    }
+
+    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Пошук ПК за номером") },
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            shape = RoundedCornerShape(50)
         )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(computerList) { computer ->
+            FilterButton("Всі", filterStatus == "all") { filterStatus = "all" }
+            FilterButton("Вільні", filterStatus == "available") { filterStatus = "available" }
+            FilterButton("Зайняті", filterStatus == "occupied") { filterStatus = "occupied" }
+        }
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize().padding(top = 16.dp)
+        ) {
+            items(filteredList) { item ->
                 ComputerCard(
-                    computer = computer,
-                    onStatusChange = { newStatus ->
-                        coroutineScope.launch {
-                            computerDao.updateComputer(computer.copy(Status = newStatus))
-                        }
+                    details = item,
+                    allCustomers = allCustomers,
+                    onFreePc = { pcId ->
+                        coroutineScope.launch { computerDao.freePc(pcId) }
+                    },
+                    onAssignPc = { pcId, clientId ->
+                        coroutineScope.launch { computerDao.assignClientToPc(pcId, clientId) }
                     }
                 )
             }
@@ -63,71 +90,130 @@ fun PcGridScreen(computerDao: ComputerDao) {
 }
 
 @Composable
-fun ComputerCard(computer: ComputerEntity, onStatusChange: (String) -> Unit) {
-    val statusColor = if (computer.Status == "occupied") Color(0xFFFF0000) else Color(0xFF00FF00)
+fun FilterButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) Color(0xFFFF8484) else Color(0xFFE0E0E0),
+            contentColor = Color.Black
+        ),
+        modifier = Modifier.height(36.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+        shape = RoundedCornerShape(50)
+    ) {
+        Text(text, fontSize = 12.sp)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ComputerCard(
+    details: ComputerWithDetails,
+    allCustomers: List<CustomerEntity>,
+    onFreePc: (Int) -> Unit,
+    onAssignPc: (Int, Int) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
+    var selectedClient by remember { mutableStateOf<CustomerEntity?>(null) }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .background(statusColor)
-                )
+    val pc = details.computer
+    val specs = details.specs
+    val currentClient = details.client
 
-                Spacer(modifier = Modifier.height(16.dp))
+    val isOccupied = pc.Status == "occupied"
+    val statusColor = if (isOccupied) Color(0xFFFF4B4B) else Color(0xFF4CAF50)
 
-                Text(
-                    text = "${computer.ComputerID} ПК",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("ПК №${pc.ComputerID}", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("Характеристики:", fontWeight = FontWeight.Bold)
+                    Text("CPU: ${specs.Cpu}")
+                    Text("GPU: ${specs.Gpu}")
+                    Text("RAM: ${specs.RAM}")
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .height(20.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFDD4B4B))
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
+                    Text("Користувач:", fontWeight = FontWeight.Bold)
+                    if (isOccupied && currentClient != null) {
+                        Text("Грає: ${currentClient.FullName}")
+                        Text("Баланс: ${currentClient.Balance} грн", color = Color(0xFF388E3C))
+                    } else {
+                        // Меню вибору клієнта
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedClient?.FullName ?: "Оберіть клієнта",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                allCustomers.forEach { customer ->
+                                    DropdownMenuItem(
+                                        text = { Text(customer.FullName) },
+                                        onClick = {
+                                            selectedClient = customer
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pc.ComputerID?.let { id ->
+                            if (isOccupied) {
+                                onFreePc(id)
+                            } else {
+                                selectedClient?.CustomerID?.let { clientId ->
+                                    onAssignPc(id, clientId)
+                                }
+                            }
+                        }
+                        showDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isOccupied) Color.Red else Color.Black)
+                ) {
+                    Text(if (isOccupied) "Звільнити ПК" else "Посадити за ПК", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Закрити") }
             }
-        }
+        )
+    }
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color(0xFF424242))
-        ) {
-            DropdownMenuItem(
-                text = { Text("Увімкнути (Зайняти)", color = Color(0xFFEF5350), fontSize = 12.sp) },
-                onClick = {
-                    expanded = false
-                    onStatusChange("occupied")
-                }
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { showDialog = true },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(modifier = Modifier.fillMaxWidth().height(8.dp).background(statusColor))
+            Spacer(Modifier.height(12.dp))
+            Icon(Icons.Default.Computer, contentDescription = null, modifier = Modifier.size(32.dp))
+            Text("ПК №${pc.ComputerID}", fontWeight = FontWeight.Bold)
+
+            Text(
+                text = if (isOccupied) (currentClient?.FullName?.split(" ")?.firstOrNull() ?: "Зайнято") else "Вільно",
+                fontSize = 12.sp,
+                color = statusColor
             )
-            DropdownMenuItem(
-                text = { Text("Вимкнути (Звільнити)", color = Color(0xFF66BB6A), fontSize = 12.sp) },
-                onClick = {
-                    expanded = false
-                    onStatusChange("available")
-                }
-            )
+            Spacer(Modifier.height(12.dp))
         }
     }
 }

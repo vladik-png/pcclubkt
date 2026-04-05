@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
 
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "my_pc_club_db_v9"
+            AppDatabase::class.java, "my_pc_club_db_v12"
         )
             .createFromAsset("my_pc_club.db")
             .fallbackToDestructiveMigration()
