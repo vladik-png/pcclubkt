@@ -1,32 +1,14 @@
-package com.example.pcclubkt
+package com.example.pcclubkt.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,12 +16,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pcclubkt.database.ComputerDao
+import com.example.pcclubkt.database.ComputerEntity
 import kotlinx.coroutines.launch
 
 @Composable
-fun PcGridScreen(pcDao: PcDao) {
+fun PcGridScreen(computerDao: ComputerDao) {
     val backgroundColor = Color.White
-    val pcList by pcDao.getAllComputers().collectAsState(initial = emptyList())
+    val computerList by computerDao.getAllComputersFlow().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
 
     Column(
@@ -64,12 +48,12 @@ fun PcGridScreen(pcDao: PcDao) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(pcList) { pc ->
-                PcCard(
-                    pc = pc,
+            items(computerList) { computer ->
+                ComputerCard(
+                    computer = computer,
                     onStatusChange = { newStatus ->
                         coroutineScope.launch {
-                            pcDao.updateComputerStatus(pc.id, newStatus)
+                            computerDao.updateComputer(computer.copy(Status = newStatus))
                         }
                     }
                 )
@@ -79,8 +63,8 @@ fun PcGridScreen(pcDao: PcDao) {
 }
 
 @Composable
-fun PcCard(pc: PcEntity, onStatusChange: (Boolean) -> Unit) {
-    val statusColor = if (pc.isOccupied) Color(0xFFFF0000) else Color(0xFF00FF00)
+fun ComputerCard(computer: ComputerEntity, onStatusChange: (String) -> Unit) {
+    val statusColor = if (computer.Status == "occupied") Color(0xFFFF0000) else Color(0xFF00FF00)
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -106,7 +90,7 @@ fun PcCard(pc: PcEntity, onStatusChange: (Boolean) -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = pc.name,
+                    text = "${computer.ComputerID} ПК",
                     fontSize = 16.sp,
                     color = Color.Black
                 )
@@ -131,17 +115,17 @@ fun PcCard(pc: PcEntity, onStatusChange: (Boolean) -> Unit) {
             modifier = Modifier.background(Color(0xFF424242))
         ) {
             DropdownMenuItem(
-                text = { Text("Увімкнути", color = Color(0xFF66BB6A), fontSize = 12.sp) },
+                text = { Text("Увімкнути (Зайняти)", color = Color(0xFFEF5350), fontSize = 12.sp) },
                 onClick = {
                     expanded = false
-                    onStatusChange(true)
+                    onStatusChange("occupied")
                 }
             )
             DropdownMenuItem(
-                text = { Text("Вимкнути", color = Color(0xFFEF5350), fontSize = 12.sp) },
+                text = { Text("Вимкнути (Звільнити)", color = Color(0xFF66BB6A), fontSize = 12.sp) },
                 onClick = {
                     expanded = false
-                    onStatusChange(false)
+                    onStatusChange("available")
                 }
             )
         }

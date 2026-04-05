@@ -1,4 +1,4 @@
-package com.example.pcclubkt
+package com.example.pcclubkt.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pcclubkt.R
 
 @Composable
 fun StatisticsScreen() {
@@ -52,7 +53,7 @@ fun StatisticsScreen() {
                 )
 
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.AccountCircle,
+                    imageVector = Icons.Default.AccountCircle,
                     contentDescription = "Профіль",
                     modifier = Modifier
                         .size(36.dp)

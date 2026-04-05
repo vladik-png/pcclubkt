@@ -1,4 +1,4 @@
-package com.example.pcclubkt
+package com.example.pcclubkt.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pcclubkt.database.AppDatabase
 import kotlinx.coroutines.launch
 
 @Composable
@@ -102,16 +103,23 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                if (loginText.isEmpty() || passwordText.isEmpty()) {
+                val cleanLogin = loginText.trim()
+                val cleanPassword = passwordText.trim()
+
+                if (cleanLogin.isEmpty() || cleanPassword.isEmpty()) {
                     errorMessage = "Заповніть усі поля"
                 } else {
                     scope.launch {
-                        val admin = db.adminDao().getAdminByLogin(loginText)
+                        val loginData = db.loginDao().getUserByUsername(cleanLogin)
 
-                        if (admin != null && admin.password == passwordText) {
-                            onLoginSuccess(admin.name)
+                        if (loginData != null && loginData.Password == cleanPassword) {
+
+                            val staffMember = db.staffDao().getStaffByUsername(cleanLogin)
+                            val displayName = staffMember?.FullName ?: loginData.Username ?: "Адмін"
+
+                            onLoginSuccess(displayName)
                         } else {
-                            errorMessage = "Невірний логін або пароль"
+                            errorMessage = "Такого користувача не знайдено або пароль невірний"
                         }
                     }
                 }

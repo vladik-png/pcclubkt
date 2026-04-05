@@ -1,4 +1,4 @@
-package com.example.pcclubkt
+package com.example.pcclubkt.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column

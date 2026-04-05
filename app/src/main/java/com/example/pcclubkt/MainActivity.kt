@@ -22,11 +22,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.example.pcclubkt.database.AppDatabase
+import com.example.pcclubkt.screens.HelloScreen
+import com.example.pcclubkt.screens.LoginScreen
+import com.example.pcclubkt.screens.MainScreen
 import com.example.pcclubkt.ui.theme.PcclubktTheme
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,18 +37,11 @@ class MainActivity : ComponentActivity() {
 
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "pc_club_database"
-        ).fallbackToDestructiveMigration().build()
-
-        lifecycleScope.launch {
-            val pcDao = db.pcDao()
-            val adminDao = db.adminDao()
-            val initialPcs = List(18) { index ->
-                PcEntity(id = index + 1, name = "${index + 1} пк", isOccupied = false)
-            }
-            pcDao.insertComputers(initialPcs)
-            adminDao.insertAdmin(AdminEntity(login = "admin", password = "admin", name = "admin"))
-        }
+            AppDatabase::class.java, "my_pc_club_db_v9"
+        )
+            .createFromAsset("my_pc_club.db")
+            .fallbackToDestructiveMigration()
+            .build()
 
         setContent {
             PcclubktTheme {
@@ -62,8 +57,10 @@ class MainActivity : ComponentActivity() {
                     "login" -> {
                         LoginScreen(
                             db = db,
-                            onLoginSuccess = { adminName -> loggedInAdminName = adminName
-                                currentScreen = "hello" }
+                            onLoginSuccess = { adminName ->
+                                loggedInAdminName = adminName
+                                currentScreen = "hello"
+                            }
                         )
                     }
                     "hello" -> {

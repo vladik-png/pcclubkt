@@ -1,4 +1,4 @@
-package com.example.pcclubkt
+package com.example.pcclubkt.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -31,8 +31,8 @@ fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
         Pair("statistics", Icons.Default.Star),
         Pair("home", Icons.Default.Home),
         Pair("tickets", Icons.Default.ShoppingCart),
-        Pair("clients", Icons.Default.List),
-        Pair("events", Icons.Default.DateRange)
+        Pair("clients", Icons.AutoMirrored.Filled.List),
+        Pair("pc_grid", Icons.Default.Computer)
     )
 
     Box(

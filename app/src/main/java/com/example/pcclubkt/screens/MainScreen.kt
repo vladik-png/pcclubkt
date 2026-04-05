@@ -1,4 +1,4 @@
-package com.example.pcclubkt
+package com.example.pcclubkt.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,12 +7,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.pcclubkt.database.AppDatabase
 
 @Composable
 fun MainScreen(db: AppDatabase) {
@@ -62,9 +62,9 @@ fun MainScreen(db: AppDatabase) {
                     Text("Тікети")
                 }
             }
-            composable("events")
+            composable("pc_grid")
             {
-                PcGridScreen(pcDao = db.pcDao())
+                PcGridScreen(computerDao = db.computerDao())
             }
 //            composable("events") {
 //                Box(Modifier.fillMaxSize()) {
