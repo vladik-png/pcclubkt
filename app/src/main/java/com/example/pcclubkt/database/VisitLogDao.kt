@@ -3,6 +3,7 @@ package com.example.pcclubkt.database
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -11,4 +12,9 @@ interface VisitLogDao {
     fun getLogsForCustomer(clientId: Int): Flow<List<VisitLogEntity>>
     @Insert
     suspend fun insertLog(log: VisitLogEntity)
+    @Query("SELECT * FROM VisitLog WHERE ComputerID = :pcId AND EndTime = 'В процесі...' ORDER BY VisitID DESC LIMIT 1")
+    suspend fun getActiveLogForComputer(pcId: Int): VisitLogEntity?
+
+    @Update
+    suspend fun updateLog(log: VisitLogEntity)
 }

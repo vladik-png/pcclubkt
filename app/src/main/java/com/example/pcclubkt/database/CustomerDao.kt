@@ -17,4 +17,7 @@ interface CustomerDao {
 
     @Query("UPDATE Customer SET LastVisit = :time WHERE CustomerID = :clientId")
     suspend fun updateLastVisit(clientId: Int, time: String)
+
+    @Query("UPDATE Customer SET Balance = Balance - :amount WHERE CustomerID = :clientId")
+    suspend fun subtractBalance(clientId: Int, amount: Int)
 }

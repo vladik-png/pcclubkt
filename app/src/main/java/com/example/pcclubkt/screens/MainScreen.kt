@@ -66,7 +66,8 @@ fun MainScreen(db: AppDatabase) {
             composable("pc_grid") {
                 PcGridScreen(
                     computerDao = db.computerDao(),
-                    customerDao = db.customerDao()
+                    customerDao = db.customerDao(),
+                    visitLogDao = db.visitLogDao()
                 )
             }
 //            composable("events") {

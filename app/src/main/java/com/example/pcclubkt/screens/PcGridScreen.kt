@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material3.*
@@ -15,23 +16,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pcclubkt.database.ComputerDao
-import com.example.pcclubkt.database.ComputerWithDetails
-import com.example.pcclubkt.database.CustomerDao
-import com.example.pcclubkt.database.CustomerEntity
+import com.example.pcclubkt.database.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
-fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao) {
+fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao: VisitLogDao) {
     val computerList by computerDao.getComputersWithDetails().collectAsState(initial = emptyList())
     val allCustomers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
 
     var searchQuery by remember { mutableStateOf("") }
     var filterStatus by remember { mutableStateOf("all") }
-
 
     val occupiedClientIds = computerList
         .filter { it.computer.Status == "occupied" }
@@ -81,10 +81,37 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao) {
                     details = item,
                     availableCustomers = availableCustomers,
                     onFreePc = { pcId ->
-                        coroutineScope.launch { computerDao.freePc(pcId) }
+                        coroutineScope.launch {
+                            computerDao.freePc(pcId)
+                        }
                     },
-                    onAssignPc = { pcId, clientId ->
-                        coroutineScope.launch { computerDao.assignClientToPc(pcId, clientId) }
+                    onAssignPcWithTime = { pcId, clientId, minutes ->
+                        coroutineScope.launch {
+                            val pricePerMin = 10
+                            val totalCost = minutes * pricePerMin
+
+                            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                            val calendar = Calendar.getInstance()
+
+                            val startTime = sdf.format(calendar.time)
+                            calendar.add(Calendar.MINUTE, minutes)
+                            val endTime = sdf.format(calendar.time)
+
+                            customerDao.subtractBalance(clientId, totalCost)
+
+                            computerDao.assignClientToPc(pcId, clientId)
+
+                            visitLogDao.insertLog(
+                                VisitLogEntity(
+                                    CustomerID = clientId,
+                                    ComputerID = pcId,
+                                    StartTime = startTime,
+                                    EndTime = endTime
+                                )
+                            )
+
+                            customerDao.updateLastVisit(clientId, startTime)
+                        }
                     }
                 )
             }
@@ -114,11 +141,14 @@ fun ComputerCard(
     details: ComputerWithDetails,
     availableCustomers: List<CustomerEntity>,
     onFreePc: (Int) -> Unit,
-    onAssignPc: (Int, Int) -> Unit
+    onAssignPcWithTime: (Int, Int, Int) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var selectedClient by remember { mutableStateOf<CustomerEntity?>(null) }
+    var minutesInput by remember { mutableStateOf("") }
+
+    val pricePerMin = 10
 
     val pc = details.computer
     val specs = details.specs
@@ -133,73 +163,95 @@ fun ComputerCard(
             title = { Text("ПК №${pc.ComputerID}", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text("⚙️ Характеристики:", fontWeight = FontWeight.Bold)
-                    Text("CPU: ${specs.Cpu}")
-                    Text("GPU: ${specs.Gpu}")
-                    Text("RAM: ${specs.RAM}")
+                    Text("Характеристики:", fontWeight = FontWeight.Bold)
+                    Text("CPU: ${specs.Cpu ?: "N/A"} | GPU: ${specs.Gpu ?: "N/A"}")
+                    Text("RAM: ${specs.RAM ?: "N/A"}")
 
                     Spacer(Modifier.height(16.dp))
 
-                    Text("👤 Користувач:", fontWeight = FontWeight.Bold)
                     if (isOccupied && currentClient != null) {
+                        Text("Користувач:", fontWeight = FontWeight.Bold)
                         Text("Грає: ${currentClient.FullName}")
-                        Text("Баланс: ${currentClient.Balance} грн", color = Color(0xFF388E3C))
+                        Text("Баланс: ${currentClient.Balance} ₴", color = Color(0xFF388E3C))
                     } else {
-                        if (availableCustomers.isEmpty()) {
-                            Text("Усі клієнти вже зайняті або не зареєстровані.", color = Color.Red, fontSize = 14.sp)
-                        } else {
-                            ExposedDropdownMenuBox(
+                        Text("Вибір клієнта:", fontWeight = FontWeight.Bold)
+
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedClient?.FullName ?: "Оберіть клієнта",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
                                 expanded = expanded,
-                                onExpandedChange = { expanded = !expanded }
+                                onDismissRequest = { expanded = false }
                             ) {
-                                OutlinedTextField(
-                                    value = selectedClient?.FullName ?: "Оберіть клієнта",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                    modifier = Modifier.menuAnchor()
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }
-                                ) {
-                                    availableCustomers.forEach { customer ->
-                                        DropdownMenuItem(
-                                            text = { Text(customer.FullName) },
-                                            onClick = {
-                                                selectedClient = customer
-                                                expanded = false
-                                            }
-                                        )
-                                    }
+                                availableCustomers.forEach { customer ->
+                                    DropdownMenuItem(
+                                        text = { Text("${customer.FullName} (${customer.Balance} ₴)") },
+                                        onClick = {
+                                            selectedClient = customer
+                                            val maxPossible = customer.Balance / pricePerMin
+                                            minutesInput = if (maxPossible >= 60) "60" else maxPossible.toString()
+                                            expanded = false
+                                        }
+                                    )
                                 }
                             }
+                        }
+
+                        selectedClient?.let { client ->
+                            val maxPossibleMinutes = (client.Balance / pricePerMin)
+                            Spacer(Modifier.height(16.dp))
+                            Text("Час гри (Макс: $maxPossibleMinutes хв)", fontWeight = FontWeight.Bold)
+
+                            OutlinedTextField(
+                                value = minutesInput,
+                                onValueChange = { newValue ->
+                                    if (newValue.all { it.isDigit() }) {
+                                        val enteredNum = newValue.toIntOrNull() ?: 0
+                                        if (enteredNum <= maxPossibleMinutes) {
+                                            minutesInput = newValue
+                                        }
+                                    }
+                                },
+                                label = { Text("Хвилини") },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
+
+                            val cost = (minutesInput.toIntOrNull() ?: 0) * pricePerMin
+                            Text("Буде знято: $cost ₴", color = Color.Red, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             },
             confirmButton = {
                 Button(
-                    enabled = isOccupied || selectedClient != null,
+                    enabled = isOccupied || (selectedClient != null && (minutesInput.toIntOrNull() ?: 0) > 0),
                     onClick = {
                         pc.ComputerID?.let { id ->
                             if (isOccupied) {
                                 onFreePc(id)
                             } else {
+                                val mins = minutesInput.toIntOrNull() ?: 0
                                 selectedClient?.CustomerID?.let { clientId ->
-                                    onAssignPc(id, clientId)
+                                    onAssignPcWithTime(id, clientId, mins)
                                 }
                             }
                         }
                         showDialog = false
                         selectedClient = null
+                        minutesInput = ""
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isOccupied) Color.Red else Color.Black,
-                        disabledContainerColor = Color.LightGray
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isOccupied) Color.Red else Color.Black)
                 ) {
-                    Text(if (isOccupied) "Звільнити ПК" else "Посадити за ПК", color = Color.White)
+                    Text(if (isOccupied) "Звільнити ПК" else "Посадити за ПК")
                 }
             },
             dismissButton = {
@@ -216,9 +268,8 @@ fun ComputerCard(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.fillMaxWidth().height(8.dp).background(statusColor))
             Spacer(Modifier.height(12.dp))
-            Icon(Icons.Default.Computer, contentDescription = null, modifier = Modifier.size(32.dp))
+            Icon(Icons.Default.Computer, null, modifier = Modifier.size(32.dp))
             Text("ПК №${pc.ComputerID}", fontWeight = FontWeight.Bold)
-
             Text(
                 text = if (isOccupied) (currentClient?.FullName?.split(" ")?.firstOrNull() ?: "Зайнято") else "Вільно",
                 fontSize = 12.sp,
