@@ -24,18 +24,21 @@ import com.example.pcclubkt.database.CustomerEntity
 import kotlinx.coroutines.launch
 
 @Composable
-fun PcGridScreen(
-    computerDao: ComputerDao,
-    customerDao: CustomerDao
-) {
+fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao) {
     val computerList by computerDao.getComputersWithDetails().collectAsState(initial = emptyList())
-
     val allCustomers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
-
     val coroutineScope = rememberCoroutineScope()
 
     var searchQuery by remember { mutableStateOf("") }
     var filterStatus by remember { mutableStateOf("all") }
+
+
+    val occupiedClientIds = computerList
+        .filter { it.computer.Status == "occupied" }
+        .mapNotNull { it.computer.CurrentClientID }
+        .toSet()
+
+    val availableCustomers = allCustomers.filter { it.CustomerID !in occupiedClientIds }
 
     val filteredList = computerList.filter { item ->
         val pc = item.computer
@@ -76,7 +79,7 @@ fun PcGridScreen(
             items(filteredList) { item ->
                 ComputerCard(
                     details = item,
-                    allCustomers = allCustomers,
+                    availableCustomers = availableCustomers,
                     onFreePc = { pcId ->
                         coroutineScope.launch { computerDao.freePc(pcId) }
                     },
@@ -109,7 +112,7 @@ fun FilterButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
 @Composable
 fun ComputerCard(
     details: ComputerWithDetails,
-    allCustomers: List<CustomerEntity>,
+    availableCustomers: List<CustomerEntity>,
     onFreePc: (Int) -> Unit,
     onAssignPc: (Int, Int) -> Unit
 ) {
@@ -130,42 +133,45 @@ fun ComputerCard(
             title = { Text("ПК №${pc.ComputerID}", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text("Характеристики:", fontWeight = FontWeight.Bold)
+                    Text("⚙️ Характеристики:", fontWeight = FontWeight.Bold)
                     Text("CPU: ${specs.Cpu}")
                     Text("GPU: ${specs.Gpu}")
                     Text("RAM: ${specs.RAM}")
 
                     Spacer(Modifier.height(16.dp))
 
-                    Text("Користувач:", fontWeight = FontWeight.Bold)
+                    Text("👤 Користувач:", fontWeight = FontWeight.Bold)
                     if (isOccupied && currentClient != null) {
                         Text("Грає: ${currentClient.FullName}")
                         Text("Баланс: ${currentClient.Balance} грн", color = Color(0xFF388E3C))
                     } else {
-                        // Меню вибору клієнта
-                        ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = !expanded }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedClient?.FullName ?: "Оберіть клієнта",
-                                onValueChange = {},
-                                readOnly = true,
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.menuAnchor()
-                            )
-                            ExposedDropdownMenu(
+                        if (availableCustomers.isEmpty()) {
+                            Text("Усі клієнти вже зайняті або не зареєстровані.", color = Color.Red, fontSize = 14.sp)
+                        } else {
+                            ExposedDropdownMenuBox(
                                 expanded = expanded,
-                                onDismissRequest = { expanded = false }
+                                onExpandedChange = { expanded = !expanded }
                             ) {
-                                allCustomers.forEach { customer ->
-                                    DropdownMenuItem(
-                                        text = { Text(customer.FullName) },
-                                        onClick = {
-                                            selectedClient = customer
-                                            expanded = false
-                                        }
-                                    )
+                                OutlinedTextField(
+                                    value = selectedClient?.FullName ?: "Оберіть клієнта",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                    modifier = Modifier.menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    availableCustomers.forEach { customer ->
+                                        DropdownMenuItem(
+                                            text = { Text(customer.FullName) },
+                                            onClick = {
+                                                selectedClient = customer
+                                                expanded = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -174,6 +180,7 @@ fun ComputerCard(
             },
             confirmButton = {
                 Button(
+                    enabled = isOccupied || selectedClient != null,
                     onClick = {
                         pc.ComputerID?.let { id ->
                             if (isOccupied) {
@@ -185,8 +192,12 @@ fun ComputerCard(
                             }
                         }
                         showDialog = false
+                        selectedClient = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (isOccupied) Color.Red else Color.Black)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isOccupied) Color.Red else Color.Black,
+                        disabledContainerColor = Color.LightGray
+                    )
                 ) {
                     Text(if (isOccupied) "Звільнити ПК" else "Посадити за ПК", color = Color.White)
                 }

@@ -17,7 +17,6 @@ import androidx.room.PrimaryKey
             entity = CustomerEntity::class,
             parentColumns = ["CustomerID"],
             childColumns = ["CurrentClientID"],
-            onDelete = ForeignKey.NO_ACTION
         )
     ]
 )

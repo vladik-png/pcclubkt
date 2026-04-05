@@ -60,7 +60,7 @@ fun MainScreen(db: AppDatabase) {
                     Text("Тікети")
                 }
             }
-            composable("computers") {
+            composable("pc_grid") {
                 PcGridScreen(
                     computerDao = db.computerDao(),
                     customerDao = db.customerDao()

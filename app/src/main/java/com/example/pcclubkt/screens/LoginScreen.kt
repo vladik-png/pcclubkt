@@ -1,5 +1,6 @@
 package com.example.pcclubkt.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -23,6 +25,9 @@ fun LoginScreen(
     db: AppDatabase,
     onLoginSuccess: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("PcClubPrefs", Context.MODE_PRIVATE)
+
     var loginText by remember { mutableStateOf("") }
     var passwordText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
@@ -113,6 +118,11 @@ fun LoginScreen(
                         val loginData = db.loginDao().getUserByUsername(cleanLogin)
 
                         if (loginData != null && loginData.Password == cleanPassword) {
+
+                            sharedPreferences.edit()
+                                .putBoolean("isLoggedIn", true)
+                                .putString("savedUsername", cleanLogin)
+                                .apply()
 
                             val staffMember = db.staffDao().getStaffByUsername(cleanLogin)
                             val displayName = staffMember?.FullName ?: loginData.Username ?: "Адмін"

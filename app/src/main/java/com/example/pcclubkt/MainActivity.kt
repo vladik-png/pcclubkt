@@ -1,5 +1,6 @@
 package com.example.pcclubkt
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -37,21 +39,33 @@ class MainActivity : ComponentActivity() {
 
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "my_pc_club_db_v12"
+            AppDatabase::class.java, "my_pc_club_db_v21"
         )
+            //.fallbackToDestructiveMigration()
             .createFromAsset("my_pc_club.db")
-            .fallbackToDestructiveMigration()
             .build()
 
         setContent {
             PcclubktTheme {
+                val context = LocalContext.current
+                val sharedPreferences = context.getSharedPreferences("PcClubPrefs", Context.MODE_PRIVATE)
+
+                val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
+                val savedName = sharedPreferences.getString("savedUsername", "Адмін") ?: "Адмін"
+
                 var currentScreen by remember { mutableStateOf("splash") }
-                var loggedInAdminName by remember { mutableStateOf("") }
+                var loggedInAdminName by remember { mutableStateOf(savedName) }
 
                 when (currentScreen) {
                     "splash" -> {
                         SplashScreen(
-                            onSplashFinished = { currentScreen = "login" }
+                            onSplashFinished = {
+                                if (isLoggedIn) {
+                                    currentScreen = "hello"
+                                } else {
+                                    currentScreen = "login"
+                                }
+                            }
                         )
                     }
                     "login" -> {
