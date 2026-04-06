@@ -73,7 +73,7 @@ fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao, statistics
 
         Button(
             onClick = { showRegDialog = true },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD35400)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF8484)),
             shape = RoundedCornerShape(50),
             modifier = Modifier.height(40.dp).align(Alignment.End)
         ) {

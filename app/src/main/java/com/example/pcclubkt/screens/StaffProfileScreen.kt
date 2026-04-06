@@ -105,7 +105,7 @@ fun StaffProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF8484)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)

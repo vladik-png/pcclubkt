@@ -33,17 +33,21 @@ fun StatisticsScreen(statisticsDao: StatisticsDao) {
     val genderData by statisticsDao.getGenderdistribution().collectAsState(initial = emptyList())
     val ageData by statisticsDao.getAgedistribution().collectAsState(initial = emptyList())
     val earningsData by statisticsDao.getMonthlyearnings().collectAsState(initial = emptyList())
+    val expensesData by statisticsDao.getMonthlyexpenses().collectAsState(initial = emptyList())
 
-    // Список місяців для фільтрації
     val allMonths = listOf("січ", "лют", "бер", "квіт", "трав", "черв", "лип", "серп", "вер", "жовт", "лист", "груд")
     val currentMonthIdx = Calendar.getInstance().get(Calendar.MONTH)
     val activeMonths = allMonths.take(currentMonthIdx + 1)
 
     Column(
-        modifier = Modifier.fillMaxSize().background(backgroundColor).padding(horizontal = 24.dp).verticalScroll(scrollState)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .padding(horizontal = 24.dp)
+            .verticalScroll(scrollState)
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 32.dp), contentAlignment = Alignment.Center) {
-            Text(text = "Статистика", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Статистика", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
         }
 
         if (genderData.isNotEmpty()) {
@@ -56,15 +60,21 @@ fun StatisticsScreen(statisticsDao: StatisticsDao) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        // Графік прибутків
         if (earningsData.isNotEmpty()) {
-            val filteredEarnings = earningsData
-                .filter { it.Month in activeMonths }
-                .map { (it.Month ?: "") to it.Earnings.toFloat() }
-
             BarChartCard(
                 title = "Прибутки (₴)",
-                data = filteredEarnings,
+                data = earningsData.filter { it.Month in activeMonths }.map { (it.Month ?: "") to it.Earnings.toFloat() },
                 barColor = Color(0xFF4CAF50)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (expensesData.isNotEmpty()) {
+            BarChartCard(
+                title = "Витрати (₴)",
+                data = expensesData.filter { it.Month in activeMonths }.map { (it.Month ?: "") to it.Expenses.toFloat() },
+                barColor = Color(0xFFF44336)
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -75,7 +85,7 @@ fun StatisticsScreen(statisticsDao: StatisticsDao) {
                 data = ageData.map { (it.Agegroup ?: "") to it.Visits.toFloat() },
                 barColor = Color(0xFF9C27B0)
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

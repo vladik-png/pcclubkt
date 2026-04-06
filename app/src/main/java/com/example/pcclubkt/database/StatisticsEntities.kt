@@ -76,17 +76,6 @@ data class GamesEntity(
     val Top: Int
 )
 
-@Entity(tableName = "Events")
-data class EventsEntity(
-    @PrimaryKey(autoGenerate = true) val EventID: Int = 0,
-    val GameID: Int?,
-    val EventDate: String?,
-    val Prize: Int?,
-    val CountPeople: Int?,
-    val CustomerID: Int?,
-    val Status: Int?
-)
-
 @Entity(tableName = "Tovar")
 data class TovarEntity(
     @PrimaryKey(autoGenerate = true) val TovarID: Int = 0,

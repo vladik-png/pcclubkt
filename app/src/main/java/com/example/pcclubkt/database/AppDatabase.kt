@@ -12,6 +12,7 @@ import com.example.pcclubkt.database.LoginDao
         SpecsEntity::class,
         CustomerEntity::class,
         VisitLogEntity::class,
+        EventsEntity::class,
         GenderdistributionEntity::class,
         AgedistributionEntity::class,
         MonthlyhoursEntity::class,
@@ -21,7 +22,6 @@ import com.example.pcclubkt.database.LoginDao
         AveragemonthlyhoursEntity::class,
         GamepopularityEntity::class,
         GamesEntity::class,
-        EventsEntity::class,
         TovarEntity::class,
         SuppliersEntity::class
     ],
@@ -35,4 +35,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun customerDao(): CustomerDao
     abstract fun visitLogDao(): VisitLogDao
     abstract fun statisticsDao(): StatisticsDao
+    abstract fun eventDao(): EventDao
+    abstract fun gameDao(): GameDao
 }

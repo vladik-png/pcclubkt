@@ -33,12 +33,12 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
         }) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = "statistics",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("home") {
+/*            composable("home") {
                 HomeScreen()
-            }
+            }*/
             composable("statistics") {
                 StatisticsScreen(statisticsDao = db.statisticsDao())
             }
@@ -51,15 +51,23 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
                 )
             }
 
-            composable("settings") {
+           /* composable("settings") {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Text("Налаштування")
                 }
-            }
-            composable("tickets") {
+            }*/
+            /*composable("tickets") {
                 Box(Modifier.fillMaxSize()) {
                     Text("Тікети")
                 }
+            }*/
+            composable("events") {
+                EventsScreen(
+                    eventDao = db.eventDao(),
+                    gameDao = db.gameDao(),
+                    customerDao = db.customerDao(),
+                    statisticsDao = db.statisticsDao()
+                )
             }
             composable("pc_grid") {
                 PcGridScreen(
