@@ -40,12 +40,14 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
                 HomeScreen()
             }
             composable("statistics") {
-                StatisticsScreen(db.statisticsDao())
+                StatisticsScreen(statisticsDao = db.statisticsDao())
             }
 
             composable("clients") {
                 ClientsScreen(
-                    customerDao = db.customerDao(), visitLogDao = db.visitLogDao()
+                    customerDao = db.customerDao(),
+                    visitLogDao = db.visitLogDao(),
+                    statisticsDao = db.statisticsDao()
                 )
             }
 
@@ -63,7 +65,8 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
                 PcGridScreen(
                     computerDao = db.computerDao(),
                     customerDao = db.customerDao(),
-                    visitLogDao = db.visitLogDao()
+                    visitLogDao = db.visitLogDao(),
+                    statisticsDao = db.statisticsDao()
                 )
             }
             composable("profile") {

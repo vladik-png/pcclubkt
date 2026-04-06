@@ -25,7 +25,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao: VisitLogDao) {
+fun PcGridScreen(
+    computerDao: ComputerDao,
+    customerDao: CustomerDao,
+    visitLogDao: VisitLogDao,
+    statisticsDao: StatisticsDao
+) {
     val computerList by computerDao.getComputersWithDetails().collectAsState(initial = emptyList())
     val allCustomers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
@@ -135,7 +140,6 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                             val pricePerMin = 10
                             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                             val now = Date()
-
                             val activeLog = visitLogDao.getActiveLogForComputer(pcId)
 
                             activeLog?.let { log ->
@@ -143,17 +147,18 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                                     val startTime = sdf.parse(log.StartTime) ?: now
                                     val plannedEndTime = sdf.parse(log.EndTime) ?: now
 
-                                    val totalPlannedMinutes =
-                                        ((plannedEndTime.time - startTime.time) / (1000 * 60)).toInt()
-                                    val actualMinutesUsed =
-                                        ((now.time - startTime.time) / (1000 * 60)).toInt()
-                                            .coerceAtLeast(0)
+                                    val totalPlannedMinutes = ((plannedEndTime.time - startTime.time) / (1000 * 60)).toInt()
+                                    val actualMinutesUsed = ((now.time - startTime.time) / (1000 * 60)).toInt().coerceAtLeast(0)
 
                                     if (actualMinutesUsed < totalPlannedMinutes) {
-                                        val minutesToRefund =
-                                            totalPlannedMinutes - actualMinutesUsed
+                                        val minutesToRefund = totalPlannedMinutes - actualMinutesUsed
                                         val refundAmount = minutesToRefund * pricePerMin
                                         customerDao.addBalance(log.CustomerID, refundAmount)
+                                    }
+
+                                    val hoursUsed = actualMinutesUsed / 60
+                                    if (hoursUsed > 0) {
+                                        statisticsDao.addMonthlyHours(getCurrentMonthDbString(), hoursUsed)
                                     }
 
                                     visitLogDao.updateLog(log.copy(EndTime = sdf.format(now)))
@@ -162,7 +167,6 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                                     e.printStackTrace()
                                 }
                             }
-
                             computerDao.freePc(pcId)
                         }
                     },
@@ -170,11 +174,12 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                         coroutineScope.launch {
                             val pricePerMin = 10
                             val totalCost = minutes * pricePerMin
-
                             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                             val calendar = Calendar.getInstance()
-
                             val startTime = sdf.format(calendar.time)
+
+                            val client = allCustomers.find { it.CustomerID == clientId }
+
                             calendar.add(Calendar.MINUTE, minutes)
                             val endTime = sdf.format(calendar.time)
 
@@ -190,6 +195,13 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                                 )
                             )
                             customerDao.updateLastVisit(clientId, startTime)
+
+                            val month = getCurrentMonthDbString()
+                            statisticsDao.incrementMonthlySessions(month)
+                            client?.let {
+                                statisticsDao.incrementGenderVisits(it.Sex ?: "male")
+                                statisticsDao.incrementAgeGroupVisits(calculateAgeGroup(it.HappyBirthday))
+                            }
                         }
                     }
                 )
@@ -381,3 +393,4 @@ fun ComputerCard(
         }
     }
 }
+

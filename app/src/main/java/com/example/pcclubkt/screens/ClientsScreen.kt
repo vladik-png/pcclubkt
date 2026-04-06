@@ -28,9 +28,10 @@ import com.example.pcclubkt.database.VisitLogEntity
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.pcclubkt.database.StatisticsDao
 
 @Composable
-fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao) {
+fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao, statisticsDao: StatisticsDao) {
     val customers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
 
@@ -50,20 +51,14 @@ fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao) {
                 .padding(top = 24.dp, bottom = 24.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Клієнти",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = "Клієнти", fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
 
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = { Text("Пошук за ПІБ", color = Color.Gray) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(50),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
@@ -88,12 +83,7 @@ fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao) {
         Spacer(Modifier.height(16.dp))
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(customers.filter {
-                it.FullName.contains(
-                    searchQuery,
-                    ignoreCase = true
-                )
-            }) { customer ->
+            items(customers.filter { it.FullName.contains(searchQuery, ignoreCase = true) }) { customer ->
                 CustomerMiniboxItem(customer) { selectedCustomer = customer }
             }
         }
@@ -105,6 +95,12 @@ fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao) {
             onSave = { newCustomer ->
                 coroutineScope.launch {
                     customerDao.registerCustomer(newCustomer)
+
+                    newCustomer.Sex?.let { statisticsDao.incrementGenderVisits(it) }
+
+                    val ageGroup = calculateAgeGroup(newCustomer.HappyBirthday)
+                    statisticsDao.incrementAgeGroupVisits(ageGroup)
+
                     showRegDialog = false
                 }
             }
@@ -120,7 +116,11 @@ fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao) {
             onDismiss = { selectedCustomer = null },
             onAddBalance = { amount ->
                 coroutineScope.launch {
-                    liveCustomer.CustomerID?.let { id -> customerDao.addBalance(id, amount) }
+                    liveCustomer.CustomerID?.let { id ->
+                        customerDao.addBalance(id, amount)
+                        val currentMonth = getCurrentMonthDbString()
+                        statisticsDao.addMonthlyEarnings(currentMonth, amount)
+                    }
                 }
             },
             onUpdateCustomer = { updated ->
