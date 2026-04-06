@@ -62,7 +62,10 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
                 }
             }*/
             composable("events") {
-                EventsScreen(eventDao = db.eventDao())
+                EventsScreen(
+                    eventDao = db.eventDao(),
+                    statisticsDao = db.statisticsDao()
+                )
             }
             composable("pc_grid") {
                 PcGridScreen(

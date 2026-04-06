@@ -12,4 +12,7 @@ interface EventDao {
 
     @Insert
     suspend fun insertEvent(event: EventsEntity)
+
+    @Query("UPDATE Events SET Status = 1 WHERE EventID = :eventId")
+    suspend fun completeEvent(eventId: Int)
 }

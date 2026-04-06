@@ -1,6 +1,5 @@
 package com.example.pcclubkt.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,9 +17,10 @@ import androidx.compose.ui.unit.sp
 import com.example.pcclubkt.database.EventDao
 import com.example.pcclubkt.database.EventsEntity
 import kotlinx.coroutines.launch
+import com.example.pcclubkt.database.StatisticsDao
 
 @Composable
-fun EventsScreen(eventDao: EventDao) {
+fun EventsScreen(eventDao: EventDao, statisticsDao: StatisticsDao) {
     val events by eventDao.getAllEvents().collectAsState(initial = emptyList())
     var showDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -28,22 +28,12 @@ fun EventsScreen(eventDao: EventDao) {
     Scaffold(
         containerColor = Color(0xFFF3F3F3),
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showDialog = true },
-                containerColor = Color(0xFFFF8484),
-                contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Додати івент")
+            FloatingActionButton(onClick = { showDialog = true }, containerColor = Color(0xFFFF8484)) {
+                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp)
-        ) {
+        Column(modifier = Modifier.padding(padding).padding(horizontal = 24.dp)) {
             Box(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                 contentAlignment = Alignment.Center
@@ -51,35 +41,66 @@ fun EventsScreen(eventDao: EventDao) {
                 Text("Турніри Клубу", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             }
 
-            if (events.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Івентів поки немає", color = Color.Gray)
-                }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(events) { event ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(2.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Івент №${event.EventID}", fontWeight = FontWeight.Bold)
-                                    Text(event.EventDate ?: "Без дати", color = Color.Gray, fontSize = 14.sp)
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(events) { event ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Івент №${event.EventID}", fontWeight = FontWeight.Bold)
+                                Text(event.EventDate ?: "", color = Color.Gray)
+                            }
+                            Text(
+                                "Призовий фонд: ${event.Prize} ₴",
+                                color = Color(0xFF388E3C),
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Учасників: ${event.CountPeople}")
+
+                                if (event.Status == 1) {
+                                    Text(
+                                        "Завершено",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                } else {
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                eventDao.completeEvent(event.EventID)
+                                                statisticsDao.addMonthlyExpenses(
+                                                    getCurrentMonthDbString(),
+                                                    event.Prize ?: 0
+                                                )
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(
+                                                0xFFFF8484
+                                            )
+                                        ),
+                                        contentPadding = PaddingValues(
+                                            horizontal = 12.dp,
+                                            vertical = 4.dp
+                                        ),
+                                        modifier = Modifier.height(32.dp)
+                                    ) {
+                                        Text("Завершити", fontSize = 12.sp)
+                                    }
                                 }
-                                Spacer(Modifier.height(8.dp))
-                                Text("Призовий фонд: ${event.Prize ?: 0} ₴", color = Color(0xFF388E3C), fontWeight = FontWeight.Bold)
-                                Text("Кількість учасників: ${event.CountPeople ?: 0}", fontSize = 14.sp)
-                                Text(
-                                    text = if (event.Status == 1) "Завершено" else "Активний",
-                                    color = if (event.Status == 1) Color.Gray else Color(0xFFFF8484),
-                                    fontWeight = FontWeight.Medium
-                                )
                             }
                         }
                     }
@@ -87,7 +108,6 @@ fun EventsScreen(eventDao: EventDao) {
             }
         }
     }
-
     if (showDialog) {
         AddEventDialog(
             onDismiss = { showDialog = false },
