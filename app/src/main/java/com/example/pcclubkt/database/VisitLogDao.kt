@@ -12,7 +12,7 @@ interface VisitLogDao {
     fun getLogsForCustomer(clientId: Int): Flow<List<VisitLogEntity>>
     @Insert
     suspend fun insertLog(log: VisitLogEntity)
-    @Query("SELECT * FROM VisitLog WHERE ComputerID = :pcId AND EndTime = 'В процесі...' ORDER BY VisitID DESC LIMIT 1")
+    @Query("SELECT * FROM VisitLog WHERE ComputerID = :pcId ORDER BY VisitID DESC LIMIT 1")
     suspend fun getActiveLogForComputer(pcId: Int): VisitLogEntity?
 
     @Update

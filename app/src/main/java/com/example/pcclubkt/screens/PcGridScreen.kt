@@ -27,9 +27,34 @@ import java.util.*
 @Composable
 fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao: VisitLogDao) {
     val computerList by computerDao.getComputersWithDetails().collectAsState(initial = emptyList())
-    val allCustomers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
+    val allCustomers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    LaunchedEffect(computerList) {
+        while(true) {
+            val now = Date()
 
+            computerList.forEach { details ->
+                val pc = details.computer
+
+                if (pc.Status == "occupied") {
+                    val activeLog = visitLogDao.getActiveLogForComputer(pc.ComputerID ?: 0)
+
+                    activeLog?.let { log ->
+                        try {
+                            val endTime = sdf.parse(log.EndTime)
+                            if (endTime != null && now.after(endTime)) {
+                                computerDao.freePc(pc.ComputerID ?: 0)
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+            kotlinx.coroutines.delay(30000)
+        }
+    }
     var searchQuery by remember { mutableStateOf("") }
     var filterStatus by remember { mutableStateOf("all") }
 
@@ -82,9 +107,43 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                     availableCustomers = availableCustomers,
                     onFreePc = { pcId ->
                         coroutineScope.launch {
+                            val pricePerMin = 10
+                            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                            val now = Date()
+
+                            val activeLog = visitLogDao.getActiveLogForComputer(pcId)
+
+                            activeLog?.let { log ->
+                                try {
+                                    val startTime = sdf.parse(log.StartTime) ?: now
+                                    val plannedEndTime = sdf.parse(log.EndTime) ?: now
+
+                                    val totalPlannedMinutes =
+                                        ((plannedEndTime.time - startTime.time) / (1000 * 60)).toInt()
+
+                                    val actualMinutesUsed =
+                                        ((now.time - startTime.time) / (1000 * 60)).toInt()
+                                            .coerceAtLeast(0)
+
+                                    if (actualMinutesUsed < totalPlannedMinutes) {
+                                        val minutesToRefund =
+                                            totalPlannedMinutes - actualMinutesUsed
+                                        val refundAmount = minutesToRefund * pricePerMin
+
+                                        customerDao.addBalance(log.CustomerID, refundAmount)
+                                    }
+
+                                    visitLogDao.updateLog(log.copy(EndTime = sdf.format(now)))
+
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+
                             computerDao.freePc(pcId)
                         }
                     },
+
                     onAssignPcWithTime = { pcId, clientId, minutes ->
                         coroutineScope.launch {
                             val pricePerMin = 10
@@ -98,7 +157,6 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                             val endTime = sdf.format(calendar.time)
 
                             customerDao.subtractBalance(clientId, totalCost)
-
                             computerDao.assignClientToPc(pcId, clientId)
 
                             visitLogDao.insertLog(
@@ -109,7 +167,6 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                                     EndTime = endTime
                                 )
                             )
-
                             customerDao.updateLastVisit(clientId, startTime)
                         }
                     }
