@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Computer
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -24,16 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.filled.Person
 
 @Composable
 fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
     val navItems = listOf(
-        Pair("statistics", Icons.Default.Star),
-        Pair("home", Icons.Default.Home),
-        Pair("tickets", Icons.Default.ShoppingCart),
-        Pair("clients", Icons.AutoMirrored.Filled.List),
+        Pair("statistics", Icons.Default.BarChart),
+        Pair("clients", Icons.Default.People),
         Pair("pc_grid", Icons.Default.Computer),
+        Pair("tickets", Icons.Default.ConfirmationNumber),
         Pair("profile", Icons.Default.Person)
     )
 
@@ -48,13 +46,12 @@ fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
                 .fillMaxWidth()
                 .background(color = Color.White, shape = RoundedCornerShape(50))
                 .border(width = 1.5.dp, color = Color.Black, shape = RoundedCornerShape(50))
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             navItems.forEach { (route, icon) ->
                 val isSelected = currentRoute == route
-
                 val interactionSource = remember { MutableInteractionSource() }
 
                 Icon(
@@ -62,7 +59,7 @@ fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
                     contentDescription = route,
                     tint = if (isSelected) Color(0xFFFF8484) else Color.Black,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(30.dp)
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null,
