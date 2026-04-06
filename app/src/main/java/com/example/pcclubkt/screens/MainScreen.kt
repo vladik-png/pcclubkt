@@ -40,7 +40,7 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
                 HomeScreen()
             }
             composable("statistics") {
-                StatisticsScreen()
+                StatisticsScreen(db.statisticsDao())
             }
 
             composable("clients") {

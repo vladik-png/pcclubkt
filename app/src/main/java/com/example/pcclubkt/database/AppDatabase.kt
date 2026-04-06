@@ -5,7 +5,26 @@ import androidx.room.RoomDatabase
 import com.example.pcclubkt.database.LoginDao
 
 @Database(
-    entities = [ComputerEntity::class, LoginEntity::class, StaffEntity::class, SpecsEntity::class, CustomerEntity::class, VisitLogEntity::class],
+    entities = [
+        ComputerEntity::class,
+        LoginEntity::class,
+        StaffEntity::class,
+        SpecsEntity::class,
+        CustomerEntity::class,
+        VisitLogEntity::class,
+        GenderdistributionEntity::class,
+        AgedistributionEntity::class,
+        MonthlyhoursEntity::class,
+        MonthlyearningsEntity::class,
+        MonthlyexpensesEntity::class,
+        MonthlysessionsEntity::class,
+        AveragemonthlyhoursEntity::class,
+        GamepopularityEntity::class,
+        GamesEntity::class,
+        EventsEntity::class,
+        TovarEntity::class,
+        SuppliersEntity::class
+    ],
     version = 1,
     exportSchema = false
 )
@@ -15,4 +34,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun staffDao(): StaffDao
     abstract fun customerDao(): CustomerDao
     abstract fun visitLogDao(): VisitLogDao
+    abstract fun statisticsDao(): StatisticsDao
 }

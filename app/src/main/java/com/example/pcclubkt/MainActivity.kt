@@ -40,9 +40,9 @@ class MainActivity : ComponentActivity() {
 
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "my_pc_club_db_v24"
+            AppDatabase::class.java, "my_pc_club_db_v38"
         )
-            //.fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration()
             .createFromAsset("my_pc_club.db")
             .build()
 

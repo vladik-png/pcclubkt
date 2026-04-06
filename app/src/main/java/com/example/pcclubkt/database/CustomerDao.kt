@@ -23,4 +23,5 @@ interface CustomerDao {
 
     @Update
     suspend fun updateCustomer(customer: CustomerEntity)
+
 }
