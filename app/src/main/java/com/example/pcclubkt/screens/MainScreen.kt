@@ -56,10 +56,13 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
                     Text("Налаштування")
                 }
             }*/
-            composable("tickets") {
+            /*composable("tickets") {
                 Box(Modifier.fillMaxSize()) {
                     Text("Тікети")
                 }
+            }*/
+            composable("events") {
+                EventsScreen(eventDao = db.eventDao())
             }
             composable("pc_grid") {
                 PcGridScreen(

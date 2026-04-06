@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -31,7 +32,7 @@ fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
         Pair("statistics", Icons.Default.BarChart),
         Pair("clients", Icons.Default.People),
         Pair("pc_grid", Icons.Default.Computer),
-        Pair("tickets", Icons.Default.ConfirmationNumber),
+        Pair("events", Icons.Default.Event),
         Pair("profile", Icons.Default.Person)
     )
 
