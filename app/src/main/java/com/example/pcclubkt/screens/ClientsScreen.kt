@@ -4,10 +4,12 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -24,18 +26,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.pcclubkt.database.CustomerDao
 import com.example.pcclubkt.database.CustomerEntity
+import com.example.pcclubkt.database.VisitLogDao
+import com.example.pcclubkt.database.VisitLogEntity
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import com.example.pcclubkt.database.VisitLogDao
-import com.example.pcclubkt.database.VisitLogEntity
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 
 @Composable
-fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao){
+fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao) {
     val customers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
 
@@ -110,9 +108,12 @@ fun ClientsScreen(customerDao: CustomerDao, visitLogDao: VisitLogDao){
             onDismiss = { selectedCustomer = null },
             onAddBalance = { amount ->
                 coroutineScope.launch {
-                    liveCustomer.CustomerID?.let { id ->
-                        customerDao.addBalance(id, amount)
-                    }
+                    liveCustomer.CustomerID?.let { id -> customerDao.addBalance(id, amount) }
+                }
+            },
+            onUpdateCustomer = { updated ->
+                coroutineScope.launch {
+                    customerDao.updateCustomer(updated)
                 }
             }
         )
@@ -141,9 +142,11 @@ fun InfoDialog(
     customer: CustomerEntity,
     visitLogDao: VisitLogDao,
     onDismiss: () -> Unit,
-    onAddBalance: (Int) -> Unit
+    onAddBalance: (Int) -> Unit,
+    onUpdateCustomer: (CustomerEntity) -> Unit
 ) {
     var showTopUp by remember { mutableStateOf(false) }
+    var showEdit by remember { mutableStateOf(false) }
     val logs by visitLogDao.getLogsForCustomer(customer.CustomerID ?: 0).collectAsState(initial = emptyList())
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -155,7 +158,12 @@ fun InfoDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Профіль клієнта", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Профіль клієнта", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        IconButton(onClick = { showEdit = true }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Редагувати", tint = Color(0xFF1976D2))
+                        }
+                    }
                     IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, null) }
                 }
 
@@ -196,24 +204,17 @@ fun InfoDialog(
                         ProfileField("ПІБ", customer.FullName)
                         ProfileField("Телефон", customer.PhoneNumber)
                         ProfileField("Email", customer.Email)
+                        ProfileField("Останній візит", customer.LastVisit)
                     }
 
                     Spacer(Modifier.height(24.dp))
 
-                    // Історія сесій ( Visit Log )
-                    Text(
-                        text = "Історія сесій",
-                        modifier = Modifier.fillMaxWidth(),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-
+                    Text("Історія сесій", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(Modifier.height(8.dp))
 
                     if (logs.isEmpty()) {
                         Text("Історія порожня", color = Color.Gray, modifier = Modifier.padding(top = 16.dp))
                     } else {
-                        // Використовуємо Column замість LazyColumn всередині скролу, щоб не було конфліктів скролів
                         logs.forEach { log ->
                             VisitLogItem(log)
                         }
@@ -245,10 +246,38 @@ fun InfoDialog(
             }
         )
     }
+
+    if (showEdit) {
+        EditCustomerDialog(
+            customer = customer,
+            onDismiss = { showEdit = false },
+            onSave = { updatedCustomer ->
+                onUpdateCustomer(updatedCustomer)
+                showEdit = false
+            }
+        )
+    }
 }
 
 @Composable
 fun VisitLogItem(log: VisitLogEntity) {
+    // Рахуємо вартість на льоту
+    val pricePerMin = 10
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    var costText = "—"
+    var minutesPlayed = 0
+
+    try {
+        val start = sdf.parse(log.StartTime)
+        val end = sdf.parse(log.EndTime)
+        if (start != null && end != null) {
+            minutesPlayed = ((end.time - start.time) / (1000 * 60)).toInt().coerceAtLeast(0)
+            costText = "-${minutesPlayed * pricePerMin} ₴"
+        }
+    } catch (e: Exception) {
+        costText = "В процесі..."
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -265,17 +294,22 @@ fun VisitLogItem(log: VisitLogEntity) {
 
             Spacer(Modifier.width(16.dp))
 
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text("ПК №${log.ComputerID}", fontWeight = FontWeight.Bold)
-                Text("${log.StartTime} — ${log.EndTime}", fontSize = 12.sp, color = Color.Gray)
+                Text("${log.StartTime} — ${log.EndTime}", fontSize = 11.sp, color = Color.Gray)
+                if (minutesPlayed > 0) {
+                    Text("Тривалість: $minutesPlayed хв", fontSize = 11.sp, color = Color.DarkGray)
+                }
             }
+
+            Text(text = costText, fontWeight = FontWeight.Bold, color = Color(0xFFD32F2F), fontSize = 16.sp)
         }
     }
 }
 
 @Composable
 fun ProfileField(label: String, value: String) {
-    Column(modifier = Modifier.padding(bottom = 12.dp)) {
+    Column(modifier = Modifier.padding(bottom = 12.dp).fillMaxWidth()) {
         Text(label, fontSize = 12.sp, color = Color.Gray)
         Text(if (value.isBlank()) "—" else value, fontSize = 16.sp, fontWeight = FontWeight.Medium)
     }
@@ -323,6 +357,37 @@ fun RegistrationDialog(onDismiss: () -> Unit, onSave: (CustomerEntity) -> Unit) 
                     LastVisit = now
                 ))
             }) { Text("Зареєструвати") }
+        }
+    )
+}
+
+@Composable
+fun EditCustomerDialog(customer: CustomerEntity, onDismiss: () -> Unit, onSave: (CustomerEntity) -> Unit) {
+    var fullName by remember { mutableStateOf(customer.FullName) }
+    var email by remember { mutableStateOf(customer.Email) }
+    var phone by remember { mutableStateOf(customer.PhoneNumber) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Редагувати клієнта") },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                OutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = { Text("ПІБ") })
+                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Телефон") })
+                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onSave(customer.copy(
+                    FullName = fullName,
+                    PhoneNumber = phone,
+                    Email = email
+                ))
+            }) { Text("Зберегти") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Скасувати") }
         }
     )
 }
