@@ -5,8 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "Specs")
 data class SpecsEntity(
-    @PrimaryKey(autoGenerate = true)
-    val SpecsID: Int? = null,
+    @PrimaryKey(autoGenerate = true) val SpecsID: Int? = null,
     val ComputerID: Int?,
     val Cpu: String,
     val Gpu: String,

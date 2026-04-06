@@ -15,7 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pcclubkt.database.AppDatabase
 
 @Composable
-fun MainScreen(db: AppDatabase) {
+fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -23,17 +23,14 @@ fun MainScreen(db: AppDatabase) {
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
-                currentRoute = currentRoute,
-                onNavigate = { route ->
+                currentRoute = currentRoute, onNavigate = { route ->
                     navController.navigate(route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
-            )
-        }
-    ) { innerPadding ->
+                })
+        }) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = "home",
@@ -43,13 +40,15 @@ fun MainScreen(db: AppDatabase) {
                 HomeScreen()
             }
             composable("statistics") {
-                StatisticsScreen()
+                StatisticsScreen(statisticsDao = db.statisticsDao())
             }
 
             composable("clients") {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Text("Клієнти")
-                }
+                ClientsScreen(
+                    customerDao = db.customerDao(),
+                    visitLogDao = db.visitLogDao(),
+                    statisticsDao = db.statisticsDao()
+                )
             }
 
             composable("settings") {
@@ -62,9 +61,19 @@ fun MainScreen(db: AppDatabase) {
                     Text("Тікети")
                 }
             }
-            composable("pc_grid")
-            {
-                PcGridScreen(computerDao = db.computerDao())
+            composable("pc_grid") {
+                PcGridScreen(
+                    computerDao = db.computerDao(),
+                    customerDao = db.customerDao(),
+                    visitLogDao = db.visitLogDao(),
+                    statisticsDao = db.statisticsDao()
+                )
+            }
+            composable("profile") {
+                StaffProfileScreen(
+                    staffDao = db.staffDao(), currentStaffId = currentStaffId, onLogout = {
+                        onLogout()
+                    })
             }
 //            composable("events") {
 //                Box(Modifier.fillMaxSize()) {

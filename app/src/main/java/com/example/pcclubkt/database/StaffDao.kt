@@ -1,4 +1,5 @@
 package com.example.pcclubkt.database
+
 import androidx.room.Dao
 import androidx.room.Query
 
@@ -6,4 +7,7 @@ import androidx.room.Query
 interface StaffDao {
     @Query("SELECT * FROM Staff WHERE Email LIKE :username || '%' LIMIT 1")
     suspend fun getStaffByUsername(username: String): StaffEntity?
+
+    @Query("SELECT * FROM Staff WHERE StaffID = :staffId LIMIT 1")
+    suspend fun getStaffById(staffId: Int): StaffEntity?
 }

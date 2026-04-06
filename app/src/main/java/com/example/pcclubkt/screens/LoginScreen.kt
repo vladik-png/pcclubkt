@@ -1,5 +1,6 @@
 package com.example.pcclubkt.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -20,9 +22,11 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    db: AppDatabase,
-    onLoginSuccess: (String) -> Unit
+    db: AppDatabase, onLoginSuccess: (String, Int) -> Unit
 ) {
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("PcClubPrefs", Context.MODE_PRIVATE)
+
     var loginText by remember { mutableStateOf("") }
     var passwordText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
@@ -39,32 +43,22 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Вхід",
-            fontSize = 56.sp,
-            fontWeight = FontWeight.Bold,
-            color = brandColor
+            text = "Вхід", fontSize = 56.sp, fontWeight = FontWeight.Bold, color = brandColor
         )
 
         Spacer(modifier = Modifier.height(48.dp))
 
         OutlinedTextField(
-            value = loginText,
-            onValueChange = {
+            value = loginText, onValueChange = {
                 loginText = it
                 errorMessage = ""
-            },
-            label = { Text("Логін", color = Color.Gray) },
-            trailingIcon = {
+            }, label = { Text("Логін", color = Color.Gray) }, trailingIcon = {
                 Icon(Icons.Default.Person, contentDescription = null, tint = Color.Black)
-            },
-            shape = RoundedCornerShape(50),
-            colors = OutlinedTextFieldDefaults.colors(
+            }, shape = RoundedCornerShape(50), colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Black,
                 unfocusedBorderColor = Color.Black,
                 cursorColor = brandColor
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            ), modifier = Modifier.fillMaxWidth(), singleLine = true
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -114,10 +108,16 @@ fun LoginScreen(
 
                         if (loginData != null && loginData.Password == cleanPassword) {
 
-                            val staffMember = db.staffDao().getStaffByUsername(cleanLogin)
-                            val displayName = staffMember?.FullName ?: loginData.Username ?: "Адмін"
+                            sharedPreferences.edit().putBoolean("isLoggedIn", true)
+                                .putString("savedUsername", cleanLogin).apply()
 
-                            onLoginSuccess(displayName)
+                            val staffMember = db.staffDao().getStaffByUsername(cleanLogin)
+
+                            onLoginSuccess(
+                                staffMember?.FullName ?: loginData.Username ?: "Адмін",
+                                staffMember?.StaffID ?: 1
+                            )
+
                         } else {
                             errorMessage = "Такого користувача не знайдено або пароль невірний"
                         }
@@ -131,10 +131,7 @@ fun LoginScreen(
             colors = ButtonDefaults.buttonColors(containerColor = brandColor)
         ) {
             Text(
-                text = "Вхід",
-                fontSize = 20.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.Medium
+                text = "Вхід", fontSize = 20.sp, color = Color.Black, fontWeight = FontWeight.Medium
             )
         }
     }

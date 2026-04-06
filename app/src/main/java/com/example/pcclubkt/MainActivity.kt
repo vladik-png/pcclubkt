@@ -1,5 +1,6 @@
 package com.example.pcclubkt
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +31,7 @@ import com.example.pcclubkt.screens.LoginScreen
 import com.example.pcclubkt.screens.MainScreen
 import com.example.pcclubkt.ui.theme.PcclubktTheme
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableIntStateOf
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,32 +40,54 @@ class MainActivity : ComponentActivity() {
 
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "my_pc_club_db_v9"
+            AppDatabase::class.java, "my_pc_club_db_v38"
         )
+            //.fallbackToDestructiveMigration()
             .createFromAsset("my_pc_club.db")
-            .fallbackToDestructiveMigration()
             .build()
 
         setContent {
             PcclubktTheme {
-                var currentScreen by remember { mutableStateOf("splash") }
-                var loggedInAdminName by remember { mutableStateOf("") }
+                val context = LocalContext.current
+                val sharedPreferences =
+                    context.getSharedPreferences("PcClubPrefs", Context.MODE_PRIVATE)
 
+                val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
+                val savedName = sharedPreferences.getString("savedUsername", "Адмін") ?: "Адмін"
+                val savedId = sharedPreferences.getInt("savedStaffId", 1)
+                var currentScreen by remember { mutableStateOf("splash") }
+                var loggedInAdminName by remember { mutableStateOf(savedName) }
+                var loggedInStaffId by remember { mutableIntStateOf(savedId) }
                 when (currentScreen) {
                     "splash" -> {
                         SplashScreen(
-                            onSplashFinished = { currentScreen = "login" }
+                            onSplashFinished = {
+                                if (isLoggedIn) {
+                                    currentScreen = "hello"
+                                } else {
+                                    currentScreen = "login"
+                                }
+                            }
                         )
                     }
+
                     "login" -> {
                         LoginScreen(
                             db = db,
-                            onLoginSuccess = { adminName ->
+                            onLoginSuccess = { adminName, staffId ->
                                 loggedInAdminName = adminName
+                                loggedInStaffId = staffId
+                                sharedPreferences.edit().apply {
+                                    putBoolean("isLoggedIn", true)
+                                    putString("savedUsername", adminName)
+                                    putInt("savedStaffId", staffId)
+                                    apply()
+                                }
                                 currentScreen = "hello"
                             }
                         )
                     }
+
                     "hello" -> {
                         HelloScreen(
                             adminName = loggedInAdminName,
@@ -71,8 +96,21 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
                     "main" -> {
-                        MainScreen(db = db)
+                        MainScreen(
+                            db = db,
+                            currentStaffId = loggedInStaffId,
+                            onLogout = {
+                                sharedPreferences.edit().apply {
+                                    putBoolean("isLoggedIn", false)
+                                    remove("savedUsername")
+                                    remove("savedStaffId")
+                                    apply()
+                                }
+                                currentScreen = "login"
+                            }
+                        )
                     }
                 }
             }
