@@ -1,17 +1,11 @@
 package com.example.pcclubkt.database
+
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.example.pcclubkt.database.LoginDao
 
 @Database(
-    entities = [
-        ComputerEntity::class,
-        LoginEntity::class,
-        StaffEntity::class,
-        SpecsEntity::class,
-        CustomerEntity::class,
-        VisitLogEntity::class
-    ],
+    entities = [ComputerEntity::class, LoginEntity::class, StaffEntity::class, SpecsEntity::class, CustomerEntity::class, VisitLogEntity::class],
     version = 1,
     exportSchema = false
 )

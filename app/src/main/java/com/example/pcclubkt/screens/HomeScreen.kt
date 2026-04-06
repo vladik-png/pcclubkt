@@ -1,4 +1,5 @@
 package com.example.pcclubkt.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,14 +26,10 @@ fun HomeScreen() {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "123123qwe",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
+                text = "123123qwe", fontSize = 24.sp, fontWeight = FontWeight.Bold
             )
             Text(
-                text = "123",
-                fontSize = 16.sp,
-                color = Color.Gray
+                text = "123", fontSize = 16.sp, color = Color.Gray
             )
         }
     }

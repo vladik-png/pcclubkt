@@ -24,8 +24,7 @@ import java.util.Locale
 
 @Composable
 fun HelloScreen(
-    adminName: String,
-    onLoginSuccess: () -> Unit
+    adminName: String, onLoginSuccess: () -> Unit
 ) {
     val brandColor = Color(0xFFFF8484)
 
@@ -60,9 +59,7 @@ fun HelloScreen(
             colors = ButtonDefaults.buttonColors(containerColor = brandColor)
         ) {
             Text(
-                text = "Розпочати зміну",
-                color = Color.Black,
-                fontSize = 18.sp
+                text = "Розпочати зміну", color = Color.Black, fontSize = 18.sp
             )
         }
     }

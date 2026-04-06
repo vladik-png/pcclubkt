@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.Flow
 interface VisitLogDao {
     @Query("SELECT * FROM VisitLog WHERE CustomerID = :clientId ORDER BY StartTime DESC")
     fun getLogsForCustomer(clientId: Int): Flow<List<VisitLogEntity>>
+
     @Insert
     suspend fun insertLog(log: VisitLogEntity)
+
     @Query("SELECT * FROM VisitLog WHERE ComputerID = :pcId ORDER BY VisitID DESC LIMIT 1")
     suspend fun getActiveLogForComputer(pcId: Int): VisitLogEntity?
 

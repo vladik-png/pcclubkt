@@ -27,19 +27,17 @@ import java.util.*
 @Composable
 fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao: VisitLogDao) {
     val computerList by computerDao.getComputersWithDetails().collectAsState(initial = emptyList())
-    val coroutineScope = rememberCoroutineScope()
     val allCustomers by customerDao.getAllCustomers().collectAsState(initial = emptyList())
-    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-    LaunchedEffect(computerList) {
-        while(true) {
-            val now = Date()
+    val coroutineScope = rememberCoroutineScope()
 
+    LaunchedEffect(computerList) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        while (true) {
+            val now = Date()
             computerList.forEach { details ->
                 val pc = details.computer
-
                 if (pc.Status == "occupied") {
                     val activeLog = visitLogDao.getActiveLogForComputer(pc.ComputerID ?: 0)
-
                     activeLog?.let { log ->
                         try {
                             val endTime = sdf.parse(log.EndTime)
@@ -55,6 +53,7 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
             kotlinx.coroutines.delay(30000)
         }
     }
+
     var searchQuery by remember { mutableStateOf("") }
     var filterStatus by remember { mutableStateOf("all") }
 
@@ -76,17 +75,43 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
         matchesSearch && matchesFilter
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF3F3F3))
+            .padding(horizontal = 24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp, bottom = 32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Керування ПК",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             label = { Text("Пошук ПК за номером") },
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            shape = RoundedCornerShape(50)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            shape = RoundedCornerShape(50),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilterButton("Всі", filterStatus == "all") { filterStatus = "all" }
@@ -96,10 +121,10 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(bottom = 100.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize().padding(top = 16.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
             items(filteredList) { item ->
                 ComputerCard(
@@ -120,7 +145,6 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
 
                                     val totalPlannedMinutes =
                                         ((plannedEndTime.time - startTime.time) / (1000 * 60)).toInt()
-
                                     val actualMinutesUsed =
                                         ((now.time - startTime.time) / (1000 * 60)).toInt()
                                             .coerceAtLeast(0)
@@ -129,7 +153,6 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                                         val minutesToRefund =
                                             totalPlannedMinutes - actualMinutesUsed
                                         val refundAmount = minutesToRefund * pricePerMin
-
                                         customerDao.addBalance(log.CustomerID, refundAmount)
                                     }
 
@@ -143,7 +166,6 @@ fun PcGridScreen(computerDao: ComputerDao, customerDao: CustomerDao, visitLogDao
                             computerDao.freePc(pcId)
                         }
                     },
-
                     onAssignPcWithTime = { pcId, clientId, minutes ->
                         coroutineScope.launch {
                             val pricePerMin = 10
@@ -242,7 +264,12 @@ fun ComputerCard(
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
+                                modifier = Modifier
+                                    .menuAnchor(
+                                        MenuAnchorType.PrimaryNotEditable,
+                                        true
+                                    )
+                                    .fillMaxWidth()
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -254,7 +281,8 @@ fun ComputerCard(
                                         onClick = {
                                             selectedClient = customer
                                             val maxPossible = customer.Balance / pricePerMin
-                                            minutesInput = if (maxPossible >= 60) "60" else maxPossible.toString()
+                                            minutesInput =
+                                                if (maxPossible >= 60) "60" else maxPossible.toString()
                                             expanded = false
                                         }
                                     )
@@ -265,7 +293,10 @@ fun ComputerCard(
                         selectedClient?.let { client ->
                             val maxPossibleMinutes = (client.Balance / pricePerMin)
                             Spacer(Modifier.height(16.dp))
-                            Text("Час гри (Макс: $maxPossibleMinutes хв)", fontWeight = FontWeight.Bold)
+                            Text(
+                                "Час гри (Макс: $maxPossibleMinutes хв)",
+                                fontWeight = FontWeight.Bold
+                            )
 
                             OutlinedTextField(
                                 value = minutesInput,
@@ -283,14 +314,19 @@ fun ComputerCard(
                             )
 
                             val cost = (minutesInput.toIntOrNull() ?: 0) * pricePerMin
-                            Text("Буде знято: $cost ₴", color = Color.Red, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Буде знято: $cost ₴",
+                                color = Color.Red,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
             },
             confirmButton = {
                 Button(
-                    enabled = isOccupied || (selectedClient != null && (minutesInput.toIntOrNull() ?: 0) > 0),
+                    enabled = isOccupied || (selectedClient != null && (minutesInput.toIntOrNull()
+                        ?: 0) > 0),
                     onClick = {
                         pc.ComputerID?.let { id ->
                             if (isOccupied) {
@@ -318,17 +354,26 @@ fun ComputerCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { showDialog = true },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { showDialog = true },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.fillMaxWidth().height(8.dp).background(statusColor))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .background(statusColor)
+            )
             Spacer(Modifier.height(12.dp))
             Icon(Icons.Default.Computer, null, modifier = Modifier.size(32.dp))
             Text("ПК №${pc.ComputerID}", fontWeight = FontWeight.Bold)
             Text(
-                text = if (isOccupied) (currentClient?.FullName?.split(" ")?.firstOrNull() ?: "Зайнято") else "Вільно",
+                text = if (isOccupied) (currentClient?.FullName?.split(" ")?.firstOrNull()
+                    ?: "Зайнято") else "Вільно",
                 fontSize = 12.sp,
                 color = statusColor
             )

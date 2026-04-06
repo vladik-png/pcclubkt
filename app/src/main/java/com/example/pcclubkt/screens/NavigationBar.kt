@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Person
 
 @Composable
 fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
@@ -32,7 +33,8 @@ fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
         Pair("home", Icons.Default.Home),
         Pair("tickets", Icons.Default.ShoppingCart),
         Pair("clients", Icons.AutoMirrored.Filled.List),
-        Pair("pc_grid", Icons.Default.Computer)
+        Pair("pc_grid", Icons.Default.Computer),
+        Pair("profile", Icons.Default.Person)
     )
 
     Box(
@@ -64,8 +66,7 @@ fun BottomNavigationBar(currentRoute: String?, onNavigate: (String) -> Unit) {
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null,
-                            onClick = { onNavigate(route) }
-                        )
+                            onClick = { onNavigate(route) })
                 )
             }
         }

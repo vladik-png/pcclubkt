@@ -20,6 +20,7 @@ interface CustomerDao {
 
     @Query("UPDATE Customer SET Balance = Balance - :amount WHERE CustomerID = :clientId")
     suspend fun subtractBalance(clientId: Int, amount: Int)
+
     @Update
     suspend fun updateCustomer(customer: CustomerEntity)
 }

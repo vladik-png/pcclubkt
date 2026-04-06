@@ -31,6 +31,7 @@ import com.example.pcclubkt.screens.LoginScreen
 import com.example.pcclubkt.screens.MainScreen
 import com.example.pcclubkt.ui.theme.PcclubktTheme
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableIntStateOf
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,14 +49,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             PcclubktTheme {
                 val context = LocalContext.current
-                val sharedPreferences = context.getSharedPreferences("PcClubPrefs", Context.MODE_PRIVATE)
+                val sharedPreferences =
+                    context.getSharedPreferences("PcClubPrefs", Context.MODE_PRIVATE)
 
                 val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
                 val savedName = sharedPreferences.getString("savedUsername", "Адмін") ?: "Адмін"
-
+                val savedId = sharedPreferences.getInt("savedStaffId", 1)
                 var currentScreen by remember { mutableStateOf("splash") }
                 var loggedInAdminName by remember { mutableStateOf(savedName) }
-
+                var loggedInStaffId by remember { mutableIntStateOf(savedId) }
                 when (currentScreen) {
                     "splash" -> {
                         SplashScreen(
@@ -68,15 +70,24 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
                     "login" -> {
                         LoginScreen(
                             db = db,
-                            onLoginSuccess = { adminName ->
+                            onLoginSuccess = { adminName, staffId ->
                                 loggedInAdminName = adminName
+                                loggedInStaffId = staffId
+                                sharedPreferences.edit().apply {
+                                    putBoolean("isLoggedIn", true)
+                                    putString("savedUsername", adminName)
+                                    putInt("savedStaffId", staffId)
+                                    apply()
+                                }
                                 currentScreen = "hello"
                             }
                         )
                     }
+
                     "hello" -> {
                         HelloScreen(
                             adminName = loggedInAdminName,
@@ -85,8 +96,21 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
                     "main" -> {
-                        MainScreen(db = db)
+                        MainScreen(
+                            db = db,
+                            currentStaffId = loggedInStaffId,
+                            onLogout = {
+                                sharedPreferences.edit().apply {
+                                    putBoolean("isLoggedIn", false)
+                                    remove("savedUsername")
+                                    remove("savedStaffId")
+                                    apply()
+                                }
+                                currentScreen = "login"
+                            }
+                        )
                     }
                 }
             }
