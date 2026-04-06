@@ -36,4 +36,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun visitLogDao(): VisitLogDao
     abstract fun statisticsDao(): StatisticsDao
     abstract fun eventDao(): EventDao
+    abstract fun gameDao(): GameDao
 }

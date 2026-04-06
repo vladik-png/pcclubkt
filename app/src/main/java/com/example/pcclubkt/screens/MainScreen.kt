@@ -64,6 +64,8 @@ fun MainScreen(db: AppDatabase, currentStaffId: Int, onLogout: () -> Unit) {
             composable("events") {
                 EventsScreen(
                     eventDao = db.eventDao(),
+                    gameDao = db.gameDao(),
+                    customerDao = db.customerDao(),
                     statisticsDao = db.statisticsDao()
                 )
             }
